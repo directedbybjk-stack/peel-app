@@ -268,7 +268,7 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
   try {
     const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(
       query
-    )}&api_key=DEMO_KEY&dataType=Branded&pageSize=25&sortBy=dataType.keyword&sortOrder=desc`;
+    )}&api_key=8sTE38pHlkajrsNAj5davWIJRsfgGkte19fBIgh4&dataType=Branded&pageSize=25&sortBy=dataType.keyword&sortOrder=desc`;
     console.log('[Search] USDA query:', query, url);
     const usdaRes = await fetch(url);
     console.log('[Search] USDA status:', usdaRes.status);
