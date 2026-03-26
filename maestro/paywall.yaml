@@ -1,0 +1,57 @@
+appId: com.anonymous.peel-app
+---
+- launchApp
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+# If on onboarding, skip through it quickly
+- runFlow:
+    when:
+      visible:
+        id: "get-started-button"
+    commands:
+      - tapOn:
+          id: "get-started-button"
+      - waitForAnimationToEnd
+      - waitForAnimationToEnd
+      - tapOn:
+          id: "goal-general_health"
+      - tapOn:
+          id: "goals-continue-button"
+      - waitForAnimationToEnd
+      - waitForAnimationToEnd
+      - tapOn:
+          id: "allergies-continue-button"
+      - waitForAnimationToEnd
+      - waitForAnimationToEnd
+      - extendedWaitUntil:
+          visible:
+            id: "start-scanning-button"
+          timeout: 15000
+      - tapOn:
+          id: "start-scanning-button"
+      - waitForAnimationToEnd
+      - waitForAnimationToEnd
+
+# Now on home — navigate to Profile tab (rightmost icon in bottom tab bar)
+- tapOn:
+    point: "90%,95%"
+- waitForAnimationToEnd
+- takeScreenshot: "profile-screen"
+# Tap upgrade
+- tapOn:
+    id: "upgrade-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+# Verify paywall
+- assertVisible:
+    id: "plan-yearly"
+- assertVisible:
+    id: "plan-monthly"
+- takeScreenshot: "paywall-yearly"
+# Switch plans
+- tapOn:
+    id: "plan-monthly"
+- takeScreenshot: "paywall-monthly"
+- tapOn:
+    id: "plan-yearly"
+- takeScreenshot: "paywall-yearly-final"

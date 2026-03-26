@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Pressable, Switch } from 'react-native';
+import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { brand } from '@/constants/Colors';
 import { getPreferences, getScanHistory, type UserPreferences } from '@/lib/storage';
@@ -60,6 +61,7 @@ export default function ProfileScreen() {
       <Pressable
         testID="upgrade-button"
         style={({ pressed }) => [styles.upgradeCTA, pressed && styles.upgradeCTAPressed]}
+        onPress={() => router.push('/paywall')}
       >
         <View>
           <Text style={styles.upgradeTitle}>Upgrade to Peel Pro</Text>

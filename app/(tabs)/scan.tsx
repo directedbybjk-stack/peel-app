@@ -28,7 +28,7 @@ export default function ScanScreen() {
         'You\'ve used all 10 free scans today. Upgrade to Peel Pro for unlimited scanning.',
         [
           { text: 'Maybe Later', onPress: () => setScanned(false) },
-          { text: 'Upgrade', onPress: () => { setScanned(false); /* TODO: paywall */ } },
+          { text: 'Upgrade', onPress: () => { setScanned(false); router.push('/paywall'); } },
         ]
       );
       return;
