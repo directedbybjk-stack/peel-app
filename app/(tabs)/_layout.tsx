@@ -51,6 +51,7 @@ export default function TabLayout() {
         name="index"
         options={{
           title: 'Home',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView name={{ ios: 'house.fill', android: 'home', web: 'home' }} tintColor={color} size={24} />
           ),
@@ -60,6 +61,7 @@ export default function TabLayout() {
         name="search"
         options={{
           title: 'Search',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView name={{ ios: 'magnifyingglass', android: 'search', web: 'search' }} tintColor={color} size={24} />
           ),
@@ -69,6 +71,7 @@ export default function TabLayout() {
         name="scan"
         options={{
           title: 'Scan',
+          headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <View style={[styles.scanButton, focused && styles.scanButtonFocused]}>
               <SymbolView
@@ -85,6 +88,7 @@ export default function TabLayout() {
         name="history"
         options={{
           title: 'History',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView name={{ ios: 'clock.fill', android: 'history', web: 'history' }} tintColor={color} size={24} />
           ),
@@ -94,6 +98,7 @@ export default function TabLayout() {
         name="profile"
         options={{
           title: 'Profile',
+          headerShown: false,
           tabBarIcon: ({ color }) => (
             <SymbolView name={{ ios: 'person.fill', android: 'person', web: 'person' }} tintColor={color} size={24} />
           ),

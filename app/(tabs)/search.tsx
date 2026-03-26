@@ -18,8 +18,8 @@ type Product = {
 type Category = {
   id: string;
   label: string;
-  icon: string;
-  emoji: string;
+  icon: keyof typeof Ionicons.glyphMap;
+  iconColor: string;
   gradientColors: [string, string];
   query: string;
   products: Product[];
@@ -27,10 +27,10 @@ type Category = {
 };
 
 const INITIAL_CATEGORIES: Category[] = [
-  { id: 'protein-bars', label: 'Protein Bars', icon: 'barbell-outline', emoji: '🥜', gradientColors: ['#FEF3C7', '#FDE68A'], query: 'protein bar', products: [], loading: true },
-  { id: 'snacks', label: 'Snacks', icon: 'pizza-outline', emoji: '🍿', gradientColors: ['#FFE4E6', '#FECDD3'], query: 'chips snack crackers', products: [], loading: true },
-  { id: 'drinks', label: 'Water', icon: 'water-outline', emoji: '💧', gradientColors: ['#DBEAFE', '#BFDBFE'], query: 'water', products: [], loading: true },
-  { id: 'cereals', label: 'Cereals', icon: 'cafe-outline', emoji: '🥣', gradientColors: ['#F3E8FF', '#E9D5FF'], query: 'breakfast cereal granola', products: [], loading: true },
+  { id: 'protein-bars', label: 'Protein Bars', icon: 'barbell-outline', iconColor: '#92400E', gradientColors: ['#FEF3C7', '#FDE68A'], query: 'protein bar', products: [], loading: true },
+  { id: 'snacks', label: 'Snacks', icon: 'pizza-outline', iconColor: '#BE185D', gradientColors: ['#FFE4E6', '#FECDD3'], query: 'chips snack crackers', products: [], loading: true },
+  { id: 'drinks', label: 'Water', icon: 'water-outline', iconColor: '#1D4ED8', gradientColors: ['#DBEAFE', '#BFDBFE'], query: 'water', products: [], loading: true },
+  { id: 'cereals', label: 'Cereals', icon: 'cafe-outline', iconColor: '#7C3AED', gradientColors: ['#F3E8FF', '#E9D5FF'], query: 'breakfast cereal granola', products: [], loading: true },
 ];
 
 const getScoreFromGrade = (grade?: string) => {
@@ -206,7 +206,7 @@ export default function SearchScreen() {
                     colors={isActive ? ['#DCFCE7', '#BBF7D0'] : cat.gradientColors}
                     style={styles.categoryIconGradient}
                   >
-                    <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                    <Ionicons name={cat.icon} size={28} color={isActive ? brand.primary : cat.iconColor} />
                   </LinearGradient>
                 </View>
                 <Text style={[styles.categoryPillLabel, isActive && styles.categoryPillLabelActive]}>
@@ -296,7 +296,6 @@ const styles = StyleSheet.create({
     width: 72, height: 72, borderRadius: 22,
     alignItems: 'center', justifyContent: 'center',
   },
-  categoryEmoji: { fontSize: 30 },
   categoryPillLabel: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
   categoryPillLabelActive: { color: brand.primary, fontWeight: '700' },
 

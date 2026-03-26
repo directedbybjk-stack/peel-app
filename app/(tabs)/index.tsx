@@ -12,13 +12,13 @@ import { FALLBACK_CATALOG } from '@/lib/fallback-products';
 const FREE_SCAN_LIMIT = 10;
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-const RANK_TIERS: { name: string; min: number; next: string | null; icon: keyof typeof Ionicons.glyphMap; emoji: string }[] = [
-  { name: 'Seed', min: 0, next: 'Sprout', icon: 'leaf-outline', emoji: '🌱' },
-  { name: 'Sprout', min: 10, next: 'Sapling', icon: 'leaf', emoji: '🌿' },
-  { name: 'Sapling', min: 25, next: 'Tree', icon: 'flower-outline', emoji: '🌳' },
-  { name: 'Tree', min: 50, next: 'Forest', icon: 'flower', emoji: '🌲' },
-  { name: 'Forest', min: 100, next: 'Legend', icon: 'globe-outline', emoji: '🌍' },
-  { name: 'Legend', min: 250, next: null, icon: 'trophy', emoji: '🏆' },
+const RANK_TIERS: { name: string; min: number; next: string | null; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { name: 'Seed', min: 0, next: 'Sprout', icon: 'leaf-outline' },
+  { name: 'Sprout', min: 10, next: 'Sapling', icon: 'leaf' },
+  { name: 'Sapling', min: 25, next: 'Tree', icon: 'flower-outline' },
+  { name: 'Tree', min: 50, next: 'Forest', icon: 'flower' },
+  { name: 'Forest', min: 100, next: 'Legend', icon: 'globe-outline' },
+  { name: 'Legend', min: 250, next: null, icon: 'trophy' },
 ];
 
 function getRank(totalScans: number) {
@@ -102,7 +102,7 @@ export default function HomeScreen() {
           </View>
           <View style={styles.headerRight}>
             <View style={styles.streakBadge}>
-              <Text style={styles.streakEmoji}>🔥</Text>
+              <Ionicons name="flame" size={16} color="#F59E0B" />
               <Text style={styles.streakCount}>{dailyScans || 1}</Text>
             </View>
             <View style={styles.avatarCircle}>
@@ -133,7 +133,7 @@ export default function HomeScreen() {
               <Text style={styles.rankName}>{tier.name}</Text>
             </View>
             <View style={styles.rankEmojiCircle}>
-              <Text style={styles.rankEmoji}>{tier.emoji}</Text>
+              <Ionicons name={tier.icon} size={28} color="#FFFFFF" />
             </View>
           </View>
           <View style={styles.rankBottom}>
@@ -285,7 +285,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF', borderRadius: 20, paddingVertical: 6, paddingHorizontal: 12,
     shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
   },
-  streakEmoji: { fontSize: 14 },
   streakCount: { fontSize: 14, fontWeight: '800', color: '#111827' },
   avatarCircle: {
     width: 46, height: 46, borderRadius: 23, overflow: 'hidden',
@@ -318,7 +317,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center',
     borderWidth: 2, borderColor: 'rgba(255,255,255,0.1)',
   },
-  rankEmoji: { fontSize: 28 },
   rankBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
   rankScans: { fontSize: 14, fontWeight: '700', color: '#FFFFFF' },
   rankNext: { fontSize: 13, fontWeight: '500', color: 'rgba(255,255,255,0.55)' },
