@@ -344,14 +344,8 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
           });
         await Promise.allSettled(imagePromises);
 
-        // Sort: products WITH images first, then without
-        results.sort((a, b) => {
-          if (a.imageUrl && !b.imageUrl) return -1;
-          if (!a.imageUrl && b.imageUrl) return 1;
-          return 0;
-        });
-
-        return results.slice(0, 15);
+        // Only return results that have images
+        return results.filter((r) => r.imageUrl).slice(0, 15);
       }
     }
   } catch (e) {
