@@ -3,6 +3,13 @@ appId: com.anonymous.peel-app
 - launchApp:
     clearState: true
 - waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Open in \"Expo Go\"?"
+    commands:
+      - tapOn: "Open"
+      - waitForAnimationToEnd
+- waitForAnimationToEnd
 - assertVisible:
     id: "get-started-button"
 - takeScreenshot: "01-welcome"

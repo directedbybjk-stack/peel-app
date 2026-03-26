@@ -1,0 +1,53 @@
+appId: com.anonymous.peel-app
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Open in \"Expo Go\"?"
+    commands:
+      - tapOn: "Open"
+      - waitForAnimationToEnd
+- waitForAnimationToEnd
+# Navigate to Profile tab (rightmost tab ~90%)
+- tapOn:
+    point: "90%,95%"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "profile-main"
+# Open Dietary Preferences sheet
+- tapOn:
+    id: "edit-goals-button"
+- waitForAnimationToEnd
+- takeScreenshot: "profile-goals-sheet"
+# Close it by swiping down
+- swipe:
+    direction: DOWN
+    duration: 500
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+# Open Allergies sheet
+- tapOn:
+    id: "edit-allergies-button"
+- waitForAnimationToEnd
+- takeScreenshot: "profile-allergies-sheet"
+# Close it by swiping down
+- swipe:
+    direction: DOWN
+    duration: 500
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+# Open Personalized Analysis sheet
+- tapOn:
+    id: "edit-analysis-button"
+- waitForAnimationToEnd
+- takeScreenshot: "profile-analysis-sheet"
+- swipe:
+    direction: DOWN
+    duration: 500
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "profile-final"

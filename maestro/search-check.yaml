@@ -1,0 +1,21 @@
+appId: com.anonymous.peel-app
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Open in \"Expo Go\"?"
+    commands:
+      - tapOn: "Open"
+      - waitForAnimationToEnd
+- waitForAnimationToEnd
+# Tap Search tab
+- tapOn:
+    point: "30%,95%"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "search-tab-loaded"
+# Wait for products to load from API
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "search-tab-after-load"
