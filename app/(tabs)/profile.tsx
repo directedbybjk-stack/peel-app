@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, Switch, Modal,
   SafeAreaView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
@@ -51,7 +52,6 @@ export default function ProfileScreen() {
   const [totalScans, setTotalScans] = useState(0);
   const [notifications, setNotifications] = useState(true);
 
-  // Editable state
   const [editGoals, setEditGoals] = useState<string[]>([]);
   const [editAllergies, setEditAllergies] = useState<string[]>([]);
   const [editAvoid, setEditAvoid] = useState<string[]>(['seed_oils']);
@@ -100,14 +100,19 @@ export default function ProfileScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
+      <LinearGradient colors={['#F0FDF4', '#F5F7F5']} style={styles.topGradient} />
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.avatar} testID="profile-avatar">
-            <Ionicons name="person" size={36} color={brand.primary} />
+          <View style={styles.avatarOuter}>
+            <LinearGradient colors={['#DCFCE7', '#BBF7D0']} style={styles.avatar}>
+              <Ionicons name="person" size={36} color={brand.primary} />
+            </LinearGradient>
           </View>
           <Text style={styles.name}>Peel User</Text>
-          <Text style={styles.email}>Free Plan</Text>
+          <View style={styles.planBadge}>
+            <Text style={styles.planBadgeText}>Free Plan</Text>
+          </View>
         </View>
 
         {/* Stats */}
@@ -131,14 +136,24 @@ export default function ProfileScreen() {
         {/* Upgrade CTA */}
         <Pressable
           testID="upgrade-button"
-          style={({ pressed }) => [styles.upgradeCTA, pressed && styles.upgradeCTAPressed]}
+          style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
           onPress={() => router.push('/paywall')}
         >
-          <View>
-            <Text style={styles.upgradeTitle}>Upgrade to Peel Pro</Text>
-            <Text style={styles.upgradeSubtitle}>Unlimited scans, no daily limits</Text>
-          </View>
-          <Text style={styles.upgradePrice}>$5.83/mo</Text>
+          <LinearGradient
+            colors={['#16A34A', '#15803D']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.upgradeCTA}
+          >
+            <View>
+              <Text style={styles.upgradeTitle}>Upgrade to Peel Pro</Text>
+              <Text style={styles.upgradeSubtitle}>Unlimited scans, no daily limits</Text>
+            </View>
+            <View style={styles.upgradePriceWrap}>
+              <Text style={styles.upgradePrice}>$5.83</Text>
+              <Text style={styles.upgradePricePer}>/mo</Text>
+            </View>
+          </LinearGradient>
         </Pressable>
 
         {/* Preferences Section */}
@@ -146,16 +161,20 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <Pressable
             testID="edit-goals-button"
-            style={styles.menuRow}
+            style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}
             onPress={() => openSheet('goals')}
           >
             <View style={styles.menuRowLeft}>
-              <Ionicons name="leaf-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+                <Ionicons name="leaf-outline" size={18} color={brand.primary} />
+              </View>
               <Text style={styles.menuRowText}>Dietary Preferences</Text>
             </View>
             <View style={styles.menuRowRight}>
               {goals.length > 0 && (
-                <Text style={styles.menuRowBadge}>{goals.length}</Text>
+                <View style={styles.menuRowBadge}>
+                  <Text style={styles.menuRowBadgeText}>{goals.length}</Text>
+                </View>
               )}
               <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
             </View>
@@ -165,16 +184,20 @@ export default function ProfileScreen() {
 
           <Pressable
             testID="edit-allergies-button"
-            style={styles.menuRow}
+            style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}
             onPress={() => openSheet('allergies')}
           >
             <View style={styles.menuRowLeft}>
-              <Ionicons name="alert-circle-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="alert-circle-outline" size={18} color="#EF4444" />
+              </View>
               <Text style={styles.menuRowText}>Allergies</Text>
             </View>
             <View style={styles.menuRowRight}>
               {allergies.length > 0 && (
-                <Text style={styles.menuRowBadge}>{allergies.length}</Text>
+                <View style={styles.menuRowBadge}>
+                  <Text style={styles.menuRowBadgeText}>{allergies.length}</Text>
+                </View>
               )}
               <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
             </View>
@@ -184,11 +207,13 @@ export default function ProfileScreen() {
 
           <Pressable
             testID="edit-analysis-button"
-            style={styles.menuRow}
+            style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}
             onPress={() => openSheet('analysis')}
           >
             <View style={styles.menuRowLeft}>
-              <Ionicons name="analytics-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="analytics-outline" size={18} color="#3B82F6" />
+              </View>
               <Text style={styles.menuRowText}>Personalized Analysis</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
@@ -198,7 +223,9 @@ export default function ProfileScreen() {
 
           <View style={styles.menuRow}>
             <View style={styles.menuRowLeft}>
-              <Ionicons name="globe-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#F5F3FF' }]}>
+                <Ionicons name="globe-outline" size={18} color="#8B5CF6" />
+              </View>
               <Text style={styles.menuRowText}>Language</Text>
             </View>
             <Text style={styles.menuRowValue}>English</Text>
@@ -210,7 +237,9 @@ export default function ProfileScreen() {
         <View style={styles.card}>
           <View style={styles.menuRow}>
             <View style={styles.menuRowLeft}>
-              <Ionicons name="notifications-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#FFF7ED' }]}>
+                <Ionicons name="notifications-outline" size={18} color="#F59E0B" />
+              </View>
               <Text style={styles.menuRowText}>Notifications</Text>
             </View>
             <Switch
@@ -222,9 +251,11 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          <Pressable style={styles.menuRow}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
             <View style={styles.menuRowLeft}>
-              <Ionicons name="shield-checkmark-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+                <Ionicons name="shield-checkmark-outline" size={18} color={brand.primary} />
+              </View>
               <Text style={styles.menuRowText}>Privacy Policy</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
@@ -232,9 +263,11 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          <Pressable style={styles.menuRow}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
             <View style={styles.menuRowLeft}>
-              <Ionicons name="document-text-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#F3F4F6' }]}>
+                <Ionicons name="document-text-outline" size={18} color="#6B7280" />
+              </View>
               <Text style={styles.menuRowText}>Terms of Service</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
@@ -242,9 +275,11 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          <Pressable style={styles.menuRow}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
             <View style={styles.menuRowLeft}>
-              <Ionicons name="chatbubble-ellipses-outline" size={20} color="#6B7280" />
+              <View style={[styles.menuIconWrap, { backgroundColor: '#EFF6FF' }]}>
+                <Ionicons name="chatbubble-ellipses-outline" size={18} color="#3B82F6" />
+              </View>
               <Text style={styles.menuRowText}>Contact Support</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
@@ -262,10 +297,11 @@ export default function ProfileScreen() {
         onRequestClose={() => setActiveSheet(null)}
       >
         <SafeAreaView style={styles.sheetContainer}>
+          <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Dietary Preferences</Text>
-            <Pressable testID="goals-close" onPress={() => setActiveSheet(null)}>
-              <Ionicons name="close" size={24} color="#6B7280" />
+            <Pressable testID="goals-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn}>
+              <Ionicons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
           <Text style={styles.sheetSubtitle}>What are your health goals?</Text>
@@ -288,10 +324,12 @@ export default function ProfileScreen() {
           </View>
           <Pressable
             testID="goals-save"
-            style={styles.sheetSaveBtn}
+            style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
             onPress={saveAndClose}
           >
-            <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
+              <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+            </LinearGradient>
           </Pressable>
         </SafeAreaView>
       </Modal>
@@ -304,10 +342,11 @@ export default function ProfileScreen() {
         onRequestClose={() => setActiveSheet(null)}
       >
         <SafeAreaView style={styles.sheetContainer}>
+          <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Allergies & Sensitivities</Text>
-            <Pressable testID="allergies-close" onPress={() => setActiveSheet(null)}>
-              <Ionicons name="close" size={24} color="#6B7280" />
+            <Pressable testID="allergies-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn}>
+              <Ionicons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
           <Text style={styles.sheetSubtitle}>Select any food allergies or sensitivities</Text>
@@ -330,10 +369,12 @@ export default function ProfileScreen() {
           </View>
           <Pressable
             testID="allergies-save"
-            style={styles.sheetSaveBtn}
+            style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
             onPress={saveAndClose}
           >
-            <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
+              <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+            </LinearGradient>
           </Pressable>
         </SafeAreaView>
       </Modal>
@@ -346,10 +387,11 @@ export default function ProfileScreen() {
         onRequestClose={() => setActiveSheet(null)}
       >
         <SafeAreaView style={styles.sheetContainer}>
+          <View style={styles.sheetHandle} />
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Personalized Analysis</Text>
-            <Pressable testID="analysis-close" onPress={() => setActiveSheet(null)}>
-              <Ionicons name="close" size={24} color="#6B7280" />
+            <Pressable testID="analysis-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn}>
+              <Ionicons name="close" size={20} color="#6B7280" />
             </Pressable>
           </View>
 
@@ -393,10 +435,12 @@ export default function ProfileScreen() {
 
           <Pressable
             testID="analysis-save"
-            style={styles.sheetSaveBtn}
+            style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
             onPress={() => setActiveSheet(null)}
           >
-            <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
+              <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+            </LinearGradient>
           </Pressable>
         </SafeAreaView>
       </Modal>
@@ -406,89 +450,111 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7F5' },
+  topGradient: { position: 'absolute', top: 0, left: 0, right: 0, height: 200 },
   content: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 120 },
 
   // Header
   header: { alignItems: 'center', marginBottom: 20 },
+  avatarOuter: {
+    marginBottom: 14,
+    shadowColor: '#16A34A', shadowOpacity: 0.2, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
+  },
   avatar: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: '#F0FDF4',
-    alignItems: 'center', justifyContent: 'center', marginBottom: 12,
+    width: 84, height: 84, borderRadius: 42,
+    alignItems: 'center', justifyContent: 'center',
     borderWidth: 3, borderColor: brand.primary,
   },
-  name: { fontSize: 22, fontWeight: '800', color: '#111827' },
-  email: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
+  name: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  planBadge: {
+    marginTop: 6, backgroundColor: '#F3F4F6', borderRadius: 10,
+    paddingVertical: 4, paddingHorizontal: 14,
+  },
+  planBadgeText: { fontSize: 13, fontWeight: '600', color: '#9CA3AF' },
 
   // Stats
   statsRow: {
-    flexDirection: 'row', backgroundColor: '#F9FAFB', borderRadius: 16,
-    padding: 16, marginBottom: 16,
+    flexDirection: 'row', backgroundColor: '#FFFFFF', borderRadius: 18,
+    padding: 18, marginBottom: 18,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, shadowOffset: { width: 0, height: 2 },
   },
   statItem: { flex: 1, alignItems: 'center' },
-  statValue: { fontSize: 22, fontWeight: '800', color: '#111827' },
-  statLabel: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  statDivider: { width: 1, backgroundColor: '#E5E7EB' },
+  statValue: { fontSize: 24, fontWeight: '800', color: '#111827' },
+  statLabel: { fontSize: 12, color: '#9CA3AF', marginTop: 3 },
+  statDivider: { width: 1, backgroundColor: '#F3F4F6' },
 
   // Upgrade CTA
   upgradeCTA: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: brand.primary, borderRadius: 16, padding: 20, marginBottom: 24,
+    borderRadius: 18, padding: 20, marginBottom: 28,
+    shadowColor: '#16A34A', shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
   },
-  upgradeCTAPressed: { backgroundColor: brand.primaryDark },
   upgradeTitle: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
-  upgradeSubtitle: { fontSize: 13, color: '#DCFCE7', marginTop: 2 },
-  upgradePrice: { fontSize: 18, fontWeight: '800', color: '#FFFFFF' },
+  upgradeSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+  upgradePriceWrap: { flexDirection: 'row', alignItems: 'baseline' },
+  upgradePrice: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
+  upgradePricePer: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
 
   // Sections
   sectionHeader: {
     fontSize: 13, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase',
-    letterSpacing: 0.5, marginBottom: 8, marginTop: 4,
+    letterSpacing: 0.5, marginBottom: 10, marginTop: 4,
   },
   card: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, marginBottom: 20,
-    borderWidth: 1, borderColor: '#F3F4F6',
-    shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
+    backgroundColor: '#FFFFFF', borderRadius: 18, marginBottom: 20, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, shadowOffset: { width: 0, height: 2 },
   },
   menuRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 16, paddingHorizontal: 16,
+    paddingVertical: 14, paddingHorizontal: 16,
   },
+  menuRowPressed: { backgroundColor: '#F9FAFB' },
   menuRowLeft: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   menuRowRight: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  menuRowText: { fontSize: 16, color: '#374151', fontWeight: '500' },
+  menuIconWrap: {
+    width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center',
+  },
+  menuRowText: { fontSize: 15, color: '#374151', fontWeight: '500' },
   menuRowValue: { fontSize: 15, color: '#9CA3AF' },
   menuRowBadge: {
-    fontSize: 12, fontWeight: '700', color: brand.primary,
     backgroundColor: '#F0FDF4', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2,
-    overflow: 'hidden',
   },
-  menuDivider: { height: 1, backgroundColor: '#F3F4F6', marginLeft: 48 },
+  menuRowBadgeText: { fontSize: 12, fontWeight: '700', color: brand.primary },
+  menuDivider: { height: 1, backgroundColor: '#F5F5F5', marginLeft: 62 },
 
-  version: { textAlign: 'center', fontSize: 13, color: '#D1D5DB', marginTop: 12 },
+  version: { textAlign: 'center', fontSize: 13, color: '#D1D5DB', marginTop: 16 },
 
   // Sheet
-  sheetContainer: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingTop: 12 },
+  sheetContainer: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingTop: 8 },
+  sheetHandle: {
+    width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB',
+    alignSelf: 'center', marginBottom: 16,
+  },
   sheetHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 20,
   },
   sheetTitle: { fontSize: 22, fontWeight: '800', color: '#111827' },
+  sheetCloseBtn: {
+    width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6',
+    alignItems: 'center', justifyContent: 'center',
+  },
   sheetSubtitle: { fontSize: 15, color: '#6B7280', marginBottom: 16 },
   sheetChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
   selectChip: {
-    borderRadius: 20, paddingVertical: 10, paddingHorizontal: 18,
+    borderRadius: 22, paddingVertical: 10, paddingHorizontal: 18,
     borderWidth: 1.5, borderColor: '#E5E7EB', backgroundColor: '#FFFFFF',
   },
   selectChipActive: {
-    borderColor: brand.primary, backgroundColor: brand.primaryLight,
+    borderColor: brand.primary, backgroundColor: '#F0FDF4',
   },
   selectChipDanger: {
-    borderColor: brand.danger, backgroundColor: brand.dangerLight,
+    borderColor: brand.danger, backgroundColor: '#FEF2F2',
   },
   selectChipText: { fontSize: 15, fontWeight: '600', color: '#374151' },
   selectChipTextActive: { color: brand.primary },
   selectChipTextDanger: { color: brand.danger },
   sheetSaveBtn: {
-    backgroundColor: brand.primary, borderRadius: 14, paddingVertical: 16,
+    borderRadius: 16, paddingVertical: 16,
     alignItems: 'center', marginTop: 'auto', marginBottom: 20,
   },
   sheetSaveBtnText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },

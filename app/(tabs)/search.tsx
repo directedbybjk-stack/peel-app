@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { View, Text, StyleSheet, TextInput, FlatList, Pressable, Image, ActivityIndicator, ScrollView } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { brand } from '@/constants/Colors';
@@ -18,16 +19,18 @@ type Category = {
   id: string;
   label: string;
   icon: string;
+  emoji: string;
+  gradientColors: [string, string];
   query: string;
   products: Product[];
   loading: boolean;
 };
 
 const INITIAL_CATEGORIES: Category[] = [
-  { id: 'protein-bars', label: 'Protein Bars', icon: 'barbell-outline', query: 'protein bar', products: [], loading: true },
-  { id: 'snacks', label: 'Snacks', icon: 'pizza-outline', query: 'chips snack crackers', products: [], loading: true },
-  { id: 'drinks', label: 'Water', icon: 'water-outline', query: 'water', products: [], loading: true },
-  { id: 'cereals', label: 'Cereals', icon: 'cafe-outline', query: 'breakfast cereal granola', products: [], loading: true },
+  { id: 'protein-bars', label: 'Protein Bars', icon: 'barbell-outline', emoji: '🥜', gradientColors: ['#FEF3C7', '#FDE68A'], query: 'protein bar', products: [], loading: true },
+  { id: 'snacks', label: 'Snacks', icon: 'pizza-outline', emoji: '🍿', gradientColors: ['#FFE4E6', '#FECDD3'], query: 'chips snack crackers', products: [], loading: true },
+  { id: 'drinks', label: 'Water', icon: 'water-outline', emoji: '💧', gradientColors: ['#DBEAFE', '#BFDBFE'], query: 'water', products: [], loading: true },
+  { id: 'cereals', label: 'Cereals', icon: 'cafe-outline', emoji: '🥣', gradientColors: ['#F3E8FF', '#E9D5FF'], query: 'breakfast cereal granola', products: [], loading: true },
 ];
 
 const getScoreFromGrade = (grade?: string) => {
@@ -90,26 +93,28 @@ export default function SearchScreen() {
   if (searched) {
     return (
       <View style={styles.container}>
-        <View style={styles.headerArea}>
-          <View style={styles.searchBarRow}>
-            <View style={styles.searchBar}>
-              <Ionicons name="search-outline" size={18} color="#9CA3AF" />
-              <TextInput
-                style={styles.searchInput}
-                placeholder="Search products..."
-                placeholderTextColor="#9CA3AF"
-                value={query}
-                onChangeText={setQuery}
-                onSubmitEditing={() => handleSearch()}
-                returnKeyType="search"
-                autoCorrect={false}
-              />
+        <LinearGradient colors={['#F0FDF4', '#F5F7F5']} style={styles.headerGradient}>
+          <View style={styles.headerArea}>
+            <View style={styles.searchBarRow}>
+              <View style={styles.searchBar}>
+                <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+                <TextInput
+                  style={styles.searchInput}
+                  placeholder="Search products..."
+                  placeholderTextColor="#9CA3AF"
+                  value={query}
+                  onChangeText={setQuery}
+                  onSubmitEditing={() => handleSearch()}
+                  returnKeyType="search"
+                  autoCorrect={false}
+                />
+              </View>
+              <Pressable onPress={clearSearch} style={styles.cancelBtn}>
+                <Text style={styles.cancelText}>Cancel</Text>
+              </Pressable>
             </View>
-            <Pressable onPress={clearSearch} style={styles.cancelBtn}>
-              <Text style={styles.cancelText}>Cancel</Text>
-            </Pressable>
           </View>
-        </View>
+        </LinearGradient>
 
         {searchLoading ? (
           <View style={styles.loadingContainer}>
@@ -123,11 +128,16 @@ export default function SearchScreen() {
             renderItem={({ item }) => {
               const score = getScoreFromGrade(item.nutriscoreGrade);
               return (
-                <Pressable style={({ pressed }) => [styles.resultCard, pressed && { opacity: 0.8 }]} onPress={() => router.push(`/product/${item.barcode}`)}>
+                <Pressable
+                  style={({ pressed }) => [styles.resultCard, pressed && { transform: [{ scale: 0.98 }] }]}
+                  onPress={() => router.push(`/product/${item.barcode}`)}
+                >
                   {item.imageUrl ? (
                     <Image source={{ uri: item.imageUrl }} style={styles.resultImage} />
                   ) : (
-                    <View style={[styles.resultImage, styles.placeholder]}><Text style={styles.placeholderText}>N/A</Text></View>
+                    <View style={[styles.resultImage, styles.placeholder]}>
+                      <Ionicons name="image-outline" size={20} color="#D1D5DB" />
+                    </View>
                   )}
                   <View style={styles.resultInfo}>
                     <Text style={styles.resultName} numberOfLines={1}>{item.productName}</Text>
@@ -146,6 +156,9 @@ export default function SearchScreen() {
           />
         ) : (
           <View style={styles.emptyState}>
+            <View style={styles.emptyIcon}>
+              <Ionicons name="search-outline" size={32} color="#D1D5DB" />
+            </View>
             <Text style={styles.emptyTitle}>No results found</Text>
             <Text style={styles.emptySubtitle}>Try a different search term</Text>
           </View>
@@ -157,41 +170,51 @@ export default function SearchScreen() {
   // Browse catalog view
   return (
     <View style={styles.container}>
-      <View style={styles.headerArea}>
-        <View style={styles.searchBar}>
-          <Ionicons name="search-outline" size={18} color="#9CA3AF" />
-          <TextInput
-            testID="search-input"
-            style={styles.searchInput}
-            placeholder="Search products..."
-            placeholderTextColor="#9CA3AF"
-            value={query}
-            onChangeText={setQuery}
-            onSubmitEditing={() => handleSearch()}
-            returnKeyType="search"
-            autoCorrect={false}
-          />
+      <LinearGradient colors={['#F0FDF4', '#F5F7F5']} style={styles.headerGradient}>
+        <View style={styles.headerArea}>
+          <View style={styles.searchBar}>
+            <Ionicons name="search-outline" size={18} color="#9CA3AF" />
+            <TextInput
+              testID="search-input"
+              style={styles.searchInput}
+              placeholder="Search products..."
+              placeholderTextColor="#9CA3AF"
+              value={query}
+              onChangeText={setQuery}
+              onSubmitEditing={() => handleSearch()}
+              returnKeyType="search"
+              autoCorrect={false}
+            />
+          </View>
         </View>
-      </View>
+      </LinearGradient>
 
       <ScrollView contentContainerStyle={styles.catalogContent} showsVerticalScrollIndicator={false}>
         {/* Category Icons */}
         <Text style={styles.topLabel}>Top Products</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryPills}>
-          {categories.map((cat) => (
-            <Pressable
-              key={cat.id}
-              style={[styles.categoryPill, activeCategory === cat.id && styles.categoryPillActive]}
-              onPress={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
-            >
-              <View style={[styles.categoryIconCircle, activeCategory === cat.id && styles.categoryIconCircleActive]}>
-                <Ionicons name={cat.icon as any} size={28} color={activeCategory === cat.id ? brand.primary : '#6B7280'} />
-              </View>
-              <Text style={[styles.categoryPillLabel, activeCategory === cat.id && styles.categoryPillLabelActive]}>
-                {cat.label}
-              </Text>
-            </Pressable>
-          ))}
+          {categories.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <Pressable
+                key={cat.id}
+                style={[styles.categoryPill]}
+                onPress={() => setActiveCategory(isActive ? null : cat.id)}
+              >
+                <View style={[styles.categoryIconCircle, isActive && styles.categoryIconCircleActive]}>
+                  <LinearGradient
+                    colors={isActive ? ['#DCFCE7', '#BBF7D0'] : cat.gradientColors}
+                    style={styles.categoryIconGradient}
+                  >
+                    <Text style={styles.categoryEmoji}>{cat.emoji}</Text>
+                  </LinearGradient>
+                </View>
+                <Text style={[styles.categoryPillLabel, isActive && styles.categoryPillLabelActive]}>
+                  {cat.label}
+                </Text>
+              </Pressable>
+            );
+          })}
         </ScrollView>
 
         {/* Category Sections */}
@@ -201,8 +224,12 @@ export default function SearchScreen() {
           <View key={cat.id} style={styles.categorySection}>
             <View style={styles.categoryHeader}>
               <Text style={styles.categoryTitle}>{cat.label}</Text>
-              <Pressable onPress={() => { setQuery(cat.label); handleSearch(cat.query); }}>
-                <Text style={styles.viewAll}>View All  ›</Text>
+              <Pressable
+                onPress={() => { setQuery(cat.label); handleSearch(cat.query); }}
+                style={({ pressed }) => [styles.viewAllBtn, pressed && { opacity: 0.7 }]}
+              >
+                <Text style={styles.viewAll}>View All</Text>
+                <Ionicons name="chevron-forward" size={16} color="#6B7280" />
               </Pressable>
             </View>
 
@@ -217,7 +244,7 @@ export default function SearchScreen() {
                   return (
                     <Pressable
                       key={product.barcode}
-                      style={({ pressed }) => [styles.productCard, pressed && { opacity: 0.8 }]}
+                      style={({ pressed }) => [styles.productCard, pressed && { transform: [{ scale: 0.97 }] }]}
                       onPress={() => router.push(`/product/${product.barcode}`)}
                     >
                       <View style={styles.productImageWrap}>
@@ -242,62 +269,71 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7F5' },
-  headerArea: { paddingTop: 64, paddingHorizontal: 20, paddingBottom: 8 },
+  headerGradient: { paddingTop: 0 },
+  headerArea: { paddingTop: 64, paddingHorizontal: 20, paddingBottom: 12 },
   searchBarRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   searchBar: {
     flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10,
-    backgroundColor: '#FFFFFF', borderRadius: 14, paddingHorizontal: 16, height: 48,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 16, height: 50,
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 2 },
   },
   searchInput: { flex: 1, fontSize: 16, color: '#111827' },
   cancelBtn: { paddingVertical: 8 },
   cancelText: { fontSize: 15, fontWeight: '600', color: brand.primary },
 
   // Category Icons
-  topLabel: { fontSize: 20, fontWeight: '800', color: '#111827', paddingHorizontal: 20, marginTop: 12, marginBottom: 14 },
-  categoryPills: { paddingHorizontal: 20, gap: 16, marginBottom: 24 },
-  categoryPill: { alignItems: 'center', gap: 6 },
-  categoryPillActive: {},
+  topLabel: { fontSize: 20, fontWeight: '800', color: '#111827', paddingHorizontal: 20, marginTop: 16, marginBottom: 16 },
+  categoryPills: { paddingHorizontal: 20, gap: 16, marginBottom: 28 },
+  categoryPill: { alignItems: 'center', gap: 8 },
   categoryIconCircle: {
-    width: 68, height: 68, borderRadius: 20, backgroundColor: '#FFFFFF',
-    alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1.5, borderColor: '#E5E7EB',
+    width: 72, height: 72, borderRadius: 22, overflow: 'hidden',
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 },
   },
-  categoryIconCircleActive: { borderColor: brand.primary, backgroundColor: '#F0FDF4' },
+  categoryIconCircleActive: {
+    shadowColor: '#16A34A', shadowOpacity: 0.2, shadowRadius: 10,
+  },
+  categoryIconGradient: {
+    width: 72, height: 72, borderRadius: 22,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  categoryEmoji: { fontSize: 30 },
   categoryPillLabel: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
-  categoryPillLabelActive: { color: brand.primary },
+  categoryPillLabelActive: { color: brand.primary, fontWeight: '700' },
 
   // Catalog
   catalogContent: { paddingBottom: 120 },
   categorySection: { marginBottom: 28 },
   categoryHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, marginBottom: 14 },
   categoryTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
+  viewAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 2 },
   viewAll: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
   categoryLoading: { height: 180, alignItems: 'center', justifyContent: 'center' },
 
   productRow: { paddingHorizontal: 20, gap: 12 },
-  productCard: { width: 160 },
+  productCard: { width: 165 },
   productImageWrap: {
-    width: 160, height: 150, borderRadius: 16, backgroundColor: '#FFFFFF', overflow: 'hidden',
+    width: 165, height: 155, borderRadius: 18, backgroundColor: '#FFFFFF', overflow: 'hidden',
     marginBottom: 10,
-    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 6, shadowOffset: { width: 0, height: 2 },
+    shadowColor: '#000', shadowOpacity: 0.06, shadowRadius: 10, shadowOffset: { width: 0, height: 3 },
   },
   productImage: { width: '100%', height: '100%', resizeMode: 'cover' },
-  productScoreDot: { position: 'absolute', bottom: 10, left: 10, width: 12, height: 12, borderRadius: 6 },
-  productName: { fontSize: 14, fontWeight: '600', color: '#111827', lineHeight: 19, paddingHorizontal: 2, marginBottom: 2 },
+  productScoreDot: {
+    position: 'absolute', bottom: 10, left: 10, width: 14, height: 14, borderRadius: 7,
+    borderWidth: 2, borderColor: '#FFFFFF',
+  },
+  productName: { fontSize: 14, fontWeight: '600', color: '#111827', lineHeight: 19, paddingHorizontal: 2, marginBottom: 3 },
   productBrand: { fontSize: 12, color: '#9CA3AF', paddingHorizontal: 2 },
 
   placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F4F6' },
-  placeholderText: { fontSize: 12, color: '#D1D5DB' },
 
   // Search Results
   resultsList: { paddingHorizontal: 20, paddingBottom: 120, gap: 10 },
   resultCard: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFFFFF',
-    borderRadius: 16, padding: 14, gap: 14,
-    shadowColor: '#000', shadowOpacity: 0.03, shadowRadius: 6, shadowOffset: { width: 0, height: 1 },
+    borderRadius: 18, padding: 14, gap: 14,
+    shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, shadowOffset: { width: 0, height: 2 },
   },
-  resultImage: { width: 64, height: 64, borderRadius: 12, backgroundColor: '#F3F4F6' },
+  resultImage: { width: 68, height: 68, borderRadius: 14, backgroundColor: '#F3F4F6' },
   resultInfo: { flex: 1 },
   resultName: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 2 },
   resultBrand: { fontSize: 13, color: '#9CA3AF', marginBottom: 4 },
@@ -307,6 +343,10 @@ const styles = StyleSheet.create({
 
   loadingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   emptyState: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 40 },
+  emptyIcon: {
+    width: 64, height: 64, borderRadius: 20, backgroundColor: '#F3F4F6',
+    alignItems: 'center', justifyContent: 'center', marginBottom: 16,
+  },
   emptyTitle: { fontSize: 20, fontWeight: '800', color: '#111827', marginBottom: 8 },
   emptySubtitle: { fontSize: 15, color: '#9CA3AF', textAlign: 'center' },
 });

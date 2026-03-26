@@ -1,6 +1,6 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, Platform } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 
 import Colors, { brand } from '@/constants/Colors';
@@ -13,17 +13,30 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: brand.primary,
-        tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
+        tabBarInactiveTintColor: '#B0B8B0',
         tabBarStyle: {
           backgroundColor: Colors[colorScheme].background,
-          borderTopColor: Colors[colorScheme].border,
-          height: 88,
+          borderTopColor: 'rgba(0,0,0,0.04)',
+          borderTopWidth: 0.5,
+          height: 90,
           paddingBottom: 30,
           paddingTop: 8,
+          ...Platform.select({
+            ios: {
+              shadowColor: '#000',
+              shadowOpacity: 0.06,
+              shadowRadius: 12,
+              shadowOffset: { width: 0, height: -4 },
+            },
+            android: {
+              elevation: 8,
+            },
+          }),
         },
         tabBarLabelStyle: {
           fontSize: 11,
           fontWeight: '600',
+          letterSpacing: 0.1,
         },
         headerStyle: {
           backgroundColor: Colors[colorScheme].background,
@@ -95,20 +108,21 @@ export default function TabLayout() {
 const styles = StyleSheet.create({
   scanButton: {
     backgroundColor: brand.primary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 16,
+    marginBottom: 18,
     shadowColor: brand.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    shadowOpacity: 0.35,
+    shadowRadius: 10,
+    elevation: 10,
   },
   scanButtonFocused: {
     backgroundColor: brand.primaryDark,
-    transform: [{ scale: 1.05 }],
+    transform: [{ scale: 1.06 }],
+    shadowOpacity: 0.45,
   },
 });
