@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable, Image, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Image, Dimensions, Modal, SafeAreaView } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
@@ -60,6 +60,7 @@ export default function HomeScreen() {
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
   const [dailyScans, setDailyScans] = useState(0);
   const [totalScans, setTotalScans] = useState(0);
+  const [showScoreInfo, setShowScoreInfo] = useState(false);
 
   useFocusEffect(
     useCallback(() => {
@@ -146,25 +147,43 @@ export default function HomeScreen() {
         </LinearGradient>
 
         {/* Peel Score Card */}
-        <View style={styles.scoreCard}>
-          <View style={styles.scoreCardLeft}>
-            <View style={styles.scoreCardLabelRow}>
-              <Text style={styles.scoreCardLabel}>PEEL SCORE</Text>
-              <View style={[styles.scoreCardBadge, { backgroundColor: getScoreColor(peelScore) + '18' }]}>
-                <Text style={[styles.scoreCardBadgeText, { color: getScoreColor(peelScore) }]}>
-                  {getScoreLabel(peelScore)}
+        <Pressable
+          testID="peel-score-card"
+          style={({ pressed }) => [styles.scoreCard, pressed && { opacity: 0.9 }]}
+          onPress={() => setShowScoreInfo(true)}
+        >
+          {history.length > 0 ? (
+            <>
+              <View style={styles.scoreCardLeft}>
+                <View style={styles.scoreCardLabelRow}>
+                  <Text style={styles.scoreCardLabel}>PEEL SCORE</Text>
+                  <View style={[styles.scoreCardBadge, { backgroundColor: getScoreColor(peelScore) + '18' }]}>
+                    <Text style={[styles.scoreCardBadgeText, { color: getScoreColor(peelScore) }]}>
+                      {getScoreLabel(peelScore)}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={styles.scoreCardSub}>
+                  Based on {history.length} item{history.length !== 1 ? 's' : ''} in your pantry
                 </Text>
               </View>
+              <View style={styles.scoreCardRight}>
+                <Text style={[styles.scoreCardNum, { color: getScoreColor(peelScore) }]}>{peelScore}</Text>
+                <Text style={styles.scoreCardDenom}>/100</Text>
+              </View>
+            </>
+          ) : (
+            <View style={styles.scoreCardEmpty}>
+              <View style={styles.scoreCardLabelRow}>
+                <Text style={styles.scoreCardLabel}>PEEL SCORE</Text>
+                <Ionicons name="information-circle-outline" size={16} color="#9CA3AF" />
+              </View>
+              <Text style={styles.scoreCardEmptyText}>
+                Scan a product to start building your score
+              </Text>
             </View>
-            <Text style={styles.scoreCardSub}>
-              Based on {history.length} item{history.length !== 1 ? 's' : ''} in your pantry
-            </Text>
-          </View>
-          <View style={styles.scoreCardRight}>
-            <Text style={[styles.scoreCardNum, { color: getScoreColor(peelScore) }]}>{peelScore}</Text>
-            <Text style={styles.scoreCardDenom}>/100</Text>
-          </View>
-        </View>
+          )}
+        </Pressable>
 
         {/* Featured Products */}
         <View style={styles.sectionHeader}>
@@ -267,6 +286,82 @@ export default function HomeScreen() {
           </LinearGradient>
         </Pressable>
       </ScrollView>
+
+      {/* Score Info Modal */}
+      <Modal
+        visible={showScoreInfo}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowScoreInfo(false)}
+      >
+        <SafeAreaView style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Peel Score</Text>
+            <Pressable onPress={() => setShowScoreInfo(false)}>
+              <Ionicons name="close" size={24} color="#6B7280" />
+            </Pressable>
+          </View>
+
+          <View style={styles.modalScoreCircle}>
+            <Text style={[styles.modalScoreNum, { color: history.length > 0 ? getScoreColor(peelScore) : '#9CA3AF' }]}>
+              {history.length > 0 ? peelScore : '--'}
+            </Text>
+            <Text style={styles.modalScoreDenom}>/100</Text>
+          </View>
+
+          <View style={styles.modalSection}>
+            <Text style={styles.modalSectionTitle}>How is your Peel Score calculated?</Text>
+            <Text style={styles.modalSectionText}>
+              Your Peel Score is the average score of all products in your pantry. Each product is scored 0–100 based on:
+            </Text>
+          </View>
+
+          <View style={styles.modalFactors}>
+            <View style={styles.modalFactor}>
+              <View style={[styles.modalFactorIcon, { backgroundColor: '#FEE2E2' }]}>
+                <Ionicons name="water-outline" size={18} color="#EF4444" />
+              </View>
+              <View style={styles.modalFactorInfo}>
+                <Text style={styles.modalFactorTitle}>Seed Oils</Text>
+                <Text style={styles.modalFactorDesc}>Products with seed oils (canola, sunflower, soybean) score lower</Text>
+              </View>
+            </View>
+            <View style={styles.modalFactor}>
+              <View style={[styles.modalFactorIcon, { backgroundColor: '#FEF3C7' }]}>
+                <Ionicons name="flask-outline" size={18} color="#F59E0B" />
+              </View>
+              <View style={styles.modalFactorInfo}>
+                <Text style={styles.modalFactorTitle}>Processing Profile</Text>
+                <Text style={styles.modalFactorDesc}>Ultra-processed foods (NOVA 4) reduce your score significantly</Text>
+              </View>
+            </View>
+            <View style={styles.modalFactor}>
+              <View style={[styles.modalFactorIcon, { backgroundColor: '#DBEAFE' }]}>
+                <Ionicons name="warning-outline" size={18} color="#3B82F6" />
+              </View>
+              <View style={styles.modalFactorInfo}>
+                <Text style={styles.modalFactorTitle}>Additives</Text>
+                <Text style={styles.modalFactorDesc}>Artificial colors, preservatives, and sweeteners lower the score</Text>
+              </View>
+            </View>
+            <View style={styles.modalFactor}>
+              <View style={[styles.modalFactorIcon, { backgroundColor: '#DCFCE7' }]}>
+                <Ionicons name="nutrition-outline" size={18} color={brand.primary} />
+              </View>
+              <View style={styles.modalFactorInfo}>
+                <Text style={styles.modalFactorTitle}>Nutri-Score</Text>
+                <Text style={styles.modalFactorDesc}>Products with A or B Nutri-Score ratings get a bonus</Text>
+              </View>
+            </View>
+          </View>
+
+          <View style={styles.modalTip}>
+            <Text style={styles.modalTipText}>
+              Scan more products and add them to your pantry to get a more accurate Peel Score!
+            </Text>
+          </View>
+        </SafeAreaView>
+      </Modal>
     </View>
   );
 }
@@ -392,4 +487,37 @@ const styles = StyleSheet.create({
   },
   upgradeTitle: { fontSize: 16, fontWeight: '700', color: '#FFFFFF' },
   upgradeSubtitle: { fontSize: 12, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
+
+  // Score Card Empty
+  scoreCardEmpty: { flex: 1 },
+  scoreCardEmptyText: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
+
+  // Score Info Modal
+  modalContainer: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 24, paddingTop: 12 },
+  modalHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: { fontSize: 22, fontWeight: '800', color: '#111827' },
+  modalScoreCircle: {
+    flexDirection: 'row', alignItems: 'baseline', justifyContent: 'center',
+    marginBottom: 32,
+  },
+  modalScoreNum: { fontSize: 64, fontWeight: '900' },
+  modalScoreDenom: { fontSize: 24, fontWeight: '600', color: '#C4C4C4' },
+  modalSection: { marginBottom: 20 },
+  modalSectionTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 8 },
+  modalSectionText: { fontSize: 15, color: '#6B7280', lineHeight: 22 },
+  modalFactors: { gap: 16, marginBottom: 24 },
+  modalFactor: { flexDirection: 'row', gap: 14, alignItems: 'flex-start' },
+  modalFactorIcon: {
+    width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center',
+  },
+  modalFactorInfo: { flex: 1 },
+  modalFactorTitle: { fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 2 },
+  modalFactorDesc: { fontSize: 13, color: '#6B7280', lineHeight: 19 },
+  modalTip: {
+    backgroundColor: '#F0FDF4', borderRadius: 14, padding: 16, marginTop: 'auto', marginBottom: 20,
+  },
+  modalTipText: { fontSize: 14, color: brand.primary, fontWeight: '600', textAlign: 'center', lineHeight: 20 },
 });

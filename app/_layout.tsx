@@ -1,9 +1,12 @@
 import { useEffect, useState, createContext, useContext } from 'react';
+import { LogBox } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
 import { Slot, router, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
+
+LogBox.ignoreAllLogs();
 
 import { useColorScheme } from '@/components/useColorScheme';
 import { isOnboardingComplete } from '@/lib/storage';

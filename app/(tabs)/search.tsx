@@ -170,8 +170,9 @@ export default function SearchScreen() {
   // Browse catalog view
   return (
     <View style={styles.container}>
-      <LinearGradient colors={['#F0FDF4', '#F5F7F5']} style={styles.headerGradient}>
-        <View style={styles.headerArea}>
+      <ScrollView contentContainerStyle={styles.catalogContent} showsVerticalScrollIndicator={false}>
+        {/* Search Bar */}
+        <View style={styles.searchBarWrap}>
           <View style={styles.searchBar}>
             <Ionicons name="search-outline" size={18} color="#9CA3AF" />
             <TextInput
@@ -187,9 +188,7 @@ export default function SearchScreen() {
             />
           </View>
         </View>
-      </LinearGradient>
 
-      <ScrollView contentContainerStyle={styles.catalogContent} showsVerticalScrollIndicator={false}>
         {/* Category Icons */}
         <Text style={styles.topLabel}>Top Products</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categoryPills}>
@@ -281,8 +280,11 @@ const styles = StyleSheet.create({
   cancelBtn: { paddingVertical: 8 },
   cancelText: { fontSize: 15, fontWeight: '600', color: brand.primary },
 
+  // Search Bar in scroll
+  searchBarWrap: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 16 },
+
   // Category Icons
-  topLabel: { fontSize: 20, fontWeight: '800', color: '#111827', paddingHorizontal: 20, marginTop: 16, marginBottom: 16 },
+  topLabel: { fontSize: 20, fontWeight: '800', color: '#111827', paddingHorizontal: 20, marginBottom: 16 },
   categoryPills: { paddingHorizontal: 20, gap: 16, marginBottom: 28 },
   categoryPill: { alignItems: 'center', gap: 8 },
   categoryIconCircle: {
