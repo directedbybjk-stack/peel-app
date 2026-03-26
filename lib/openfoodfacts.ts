@@ -283,7 +283,7 @@ async function getOFFImage(barcode: string): Promise<string | undefined> {
       const data = await res.json();
       if (data.status !== 1) continue;
       const img = data.product?.image_front_small_url || data.product?.image_front_url;
-      if (img) return img;
+      if (img && img.startsWith('http') && img.includes('/images/')) return img;
     } catch {}
   }
   return undefined;

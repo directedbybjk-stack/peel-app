@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     borderRadius: 18, padding: 14, gap: 14,
     shadowColor: '#000', shadowOpacity: 0.04, shadowRadius: 10, shadowOffset: { width: 0, height: 2 },
   },
-  resultImage: { width: 68, height: 68, borderRadius: 14, backgroundColor: '#F3F4F6' },
+  resultImage: { width: 68, height: 68, borderRadius: 14, backgroundColor: '#F0FDF4' },
   resultInfo: { flex: 1 },
   resultName: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 2 },
   resultBrand: { fontSize: 13, color: '#9CA3AF', marginBottom: 4 },

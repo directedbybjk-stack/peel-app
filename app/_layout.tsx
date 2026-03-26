@@ -57,7 +57,19 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" />
-          <Stack.Screen name="product/[barcode]" options={{ presentation: 'card', gestureEnabled: true }} />
+          <Stack.Screen
+            name="product/[barcode]"
+            options={{
+              presentation: 'card',
+              gestureEnabled: true,
+              headerShown: true,
+              headerTitle: '',
+              headerBackTitle: 'Back',
+              headerTransparent: true,
+              headerTintColor: '#374151',
+              headerShadowVisible: false,
+            }}
+          />
           <Stack.Screen name="paywall" options={{ presentation: 'modal', gestureEnabled: true }} />
         </Stack>
       </ThemeProvider>

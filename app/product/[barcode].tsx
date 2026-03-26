@@ -59,9 +59,6 @@ export default function ProductDetailScreen() {
   if (loading) {
     return (
       <View style={styles.centered}>
-        <Pressable style={styles.backButtonAbsolute} onPress={() => router.back()} testID="back-loading">
-          <Ionicons name="chevron-back" size={24} color="#374151" />
-        </Pressable>
         <View style={styles.loadingDot}>
           <ActivityIndicator size="large" color="#16A34A" />
         </View>
@@ -73,9 +70,6 @@ export default function ProductDetailScreen() {
   if (error || !product) {
     return (
       <View style={styles.centered}>
-        <Pressable style={styles.backButtonAbsolute} onPress={() => router.back()} testID="back-error">
-          <Ionicons name="chevron-back" size={24} color="#374151" />
-        </Pressable>
         <View style={styles.errorIcon}>
           <Ionicons name="help-outline" size={28} color="#D1D5DB" />
         </View>
@@ -91,27 +85,7 @@ export default function ProductDetailScreen() {
   const sc = getScoreColor(product.score);
 
   return (
-    <View style={styles.container}>
-      {/* Fixed Back Header */}
-      <View style={styles.fixedHeader}>
-        <Pressable
-          testID="back-button"
-          style={({ pressed }) => [styles.backButton, pressed && { opacity: 0.6 }]}
-          onPress={() => router.back()}
-        >
-          <Ionicons name="chevron-back" size={22} color="#374151" />
-          <Text style={styles.backButtonText}>Back</Text>
-        </Pressable>
-        <Pressable
-          testID="share-top-button"
-          style={({ pressed }) => [pressed && { opacity: 0.6 }]}
-          onPress={handleShare}
-        >
-          <Ionicons name="share-outline" size={22} color="#374151" />
-        </Pressable>
-      </View>
-
-    <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={true} bounces={true}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} showsVerticalScrollIndicator={true} bounces={true}>
       {/* Product Header */}
       <View style={styles.productCard}>
         <View style={styles.productRow}>
@@ -331,28 +305,13 @@ export default function ProductDetailScreen() {
         <Text style={styles.ingredientsText}>{product.ingredients}</Text>
       </View>
     </ScrollView>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F7F5' },
-  fixedHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingTop: 56, paddingHorizontal: 20, paddingBottom: 10,
-    backgroundColor: '#F5F7F5',
-  },
-  content: { paddingHorizontal: 20, paddingBottom: 60 },
+  content: { paddingHorizontal: 20, paddingBottom: 60, paddingTop: 8 },
   centered: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 40, backgroundColor: '#F5F7F5' },
-  backButton: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-  },
-  backButtonText: { fontSize: 16, fontWeight: '600', color: '#374151' },
-  backButtonAbsolute: {
-    position: 'absolute', top: 56, left: 20,
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#F3F4F6',
-    alignItems: 'center', justifyContent: 'center',
-  },
   goBackBtn: {
     marginTop: 24, backgroundColor: '#16A34A', borderRadius: 14,
     paddingVertical: 14, paddingHorizontal: 32,
