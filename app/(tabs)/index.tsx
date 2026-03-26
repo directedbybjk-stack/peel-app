@@ -294,73 +294,77 @@ export default function HomeScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setShowScoreInfo(false)}
       >
-        <SafeAreaView style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Peel Score</Text>
-            <Pressable onPress={() => setShowScoreInfo(false)}>
-              <Ionicons name="close" size={24} color="#6B7280" />
-            </Pressable>
-          </View>
+        <View style={styles.modalOuter}>
+          <SafeAreaView style={styles.modalSafe}>
+            <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalScrollContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Peel Score</Text>
+                <Pressable onPress={() => setShowScoreInfo(false)} hitSlop={16}>
+                  <Ionicons name="close-circle" size={28} color="#D1D5DB" />
+                </Pressable>
+              </View>
 
-          <View style={styles.modalScoreCircle}>
-            <Text style={[styles.modalScoreNum, { color: history.length > 0 ? getScoreColor(peelScore) : '#9CA3AF' }]}>
-              {history.length > 0 ? peelScore : '--'}
-            </Text>
-            <Text style={styles.modalScoreDenom}>/100</Text>
-          </View>
+              <View style={styles.modalScoreCircle}>
+                <Text style={[styles.modalScoreNum, { color: history.length > 0 ? getScoreColor(peelScore) : '#9CA3AF' }]}>
+                  {history.length > 0 ? peelScore : '--'}
+                </Text>
+                <Text style={styles.modalScoreDenom}>/100</Text>
+              </View>
 
-          <View style={styles.modalSection}>
-            <Text style={styles.modalSectionTitle}>How is your Peel Score calculated?</Text>
-            <Text style={styles.modalSectionText}>
-              Your Peel Score is the average score of all products in your pantry. Each product is scored 0–100 based on:
-            </Text>
-          </View>
+              <View style={styles.modalSection}>
+                <Text style={styles.modalSectionTitle}>How is your Peel Score calculated?</Text>
+                <Text style={styles.modalSectionText}>
+                  Your Peel Score is the average score of all products in your pantry. Each product is scored 0–100 based on:
+                </Text>
+              </View>
 
-          <View style={styles.modalFactors}>
-            <View style={styles.modalFactor}>
-              <View style={[styles.modalFactorIcon, { backgroundColor: '#FEE2E2' }]}>
-                <Ionicons name="water-outline" size={18} color="#EF4444" />
+              <View style={styles.modalFactors}>
+                <View style={styles.modalFactor}>
+                  <View style={[styles.modalFactorIcon, { backgroundColor: '#FEE2E2' }]}>
+                    <Ionicons name="water-outline" size={18} color="#EF4444" />
+                  </View>
+                  <View style={styles.modalFactorInfo}>
+                    <Text style={styles.modalFactorTitle}>Seed Oils</Text>
+                    <Text style={styles.modalFactorDesc}>Products with seed oils (canola, sunflower, soybean) score lower</Text>
+                  </View>
+                </View>
+                <View style={styles.modalFactor}>
+                  <View style={[styles.modalFactorIcon, { backgroundColor: '#FEF3C7' }]}>
+                    <Ionicons name="flask-outline" size={18} color="#F59E0B" />
+                  </View>
+                  <View style={styles.modalFactorInfo}>
+                    <Text style={styles.modalFactorTitle}>Processing Profile</Text>
+                    <Text style={styles.modalFactorDesc}>Ultra-processed foods (NOVA 4) reduce your score significantly</Text>
+                  </View>
+                </View>
+                <View style={styles.modalFactor}>
+                  <View style={[styles.modalFactorIcon, { backgroundColor: '#DBEAFE' }]}>
+                    <Ionicons name="warning-outline" size={18} color="#3B82F6" />
+                  </View>
+                  <View style={styles.modalFactorInfo}>
+                    <Text style={styles.modalFactorTitle}>Additives</Text>
+                    <Text style={styles.modalFactorDesc}>Artificial colors, preservatives, and sweeteners lower the score</Text>
+                  </View>
+                </View>
+                <View style={styles.modalFactor}>
+                  <View style={[styles.modalFactorIcon, { backgroundColor: '#DCFCE7' }]}>
+                    <Ionicons name="nutrition-outline" size={18} color={brand.primary} />
+                  </View>
+                  <View style={styles.modalFactorInfo}>
+                    <Text style={styles.modalFactorTitle}>Nutri-Score</Text>
+                    <Text style={styles.modalFactorDesc}>Products with A or B Nutri-Score ratings get a bonus</Text>
+                  </View>
+                </View>
               </View>
-              <View style={styles.modalFactorInfo}>
-                <Text style={styles.modalFactorTitle}>Seed Oils</Text>
-                <Text style={styles.modalFactorDesc}>Products with seed oils (canola, sunflower, soybean) score lower</Text>
-              </View>
-            </View>
-            <View style={styles.modalFactor}>
-              <View style={[styles.modalFactorIcon, { backgroundColor: '#FEF3C7' }]}>
-                <Ionicons name="flask-outline" size={18} color="#F59E0B" />
-              </View>
-              <View style={styles.modalFactorInfo}>
-                <Text style={styles.modalFactorTitle}>Processing Profile</Text>
-                <Text style={styles.modalFactorDesc}>Ultra-processed foods (NOVA 4) reduce your score significantly</Text>
-              </View>
-            </View>
-            <View style={styles.modalFactor}>
-              <View style={[styles.modalFactorIcon, { backgroundColor: '#DBEAFE' }]}>
-                <Ionicons name="warning-outline" size={18} color="#3B82F6" />
-              </View>
-              <View style={styles.modalFactorInfo}>
-                <Text style={styles.modalFactorTitle}>Additives</Text>
-                <Text style={styles.modalFactorDesc}>Artificial colors, preservatives, and sweeteners lower the score</Text>
-              </View>
-            </View>
-            <View style={styles.modalFactor}>
-              <View style={[styles.modalFactorIcon, { backgroundColor: '#DCFCE7' }]}>
-                <Ionicons name="nutrition-outline" size={18} color={brand.primary} />
-              </View>
-              <View style={styles.modalFactorInfo}>
-                <Text style={styles.modalFactorTitle}>Nutri-Score</Text>
-                <Text style={styles.modalFactorDesc}>Products with A or B Nutri-Score ratings get a bonus</Text>
-              </View>
-            </View>
-          </View>
 
-          <View style={styles.modalTip}>
-            <Text style={styles.modalTipText}>
-              Scan more products and add them to your pantry to get a more accurate Peel Score!
-            </Text>
-          </View>
-        </SafeAreaView>
+              <View style={styles.modalTip}>
+                <Text style={styles.modalTipText}>
+                  Scan more products and add them to your pantry to get a more accurate Peel Score!
+                </Text>
+              </View>
+            </ScrollView>
+          </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );
@@ -493,7 +497,10 @@ const styles = StyleSheet.create({
   scoreCardEmptyText: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
 
   // Score Info Modal
-  modalContainer: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 24, paddingTop: 12 },
+  modalOuter: { flex: 1, backgroundColor: '#FFFFFF' },
+  modalSafe: { flex: 1 },
+  modalScroll: { flex: 1 },
+  modalScrollContent: { paddingHorizontal: 28, paddingTop: 16, paddingBottom: 40 },
   modalHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     marginBottom: 24,

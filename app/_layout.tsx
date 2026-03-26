@@ -15,7 +15,7 @@ export { ErrorBoundary } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
-const OnboardingContext = createContext<{ done: boolean | null }>({ done: null });
+const OnboardingContext = createContext<{ done: boolean | null; markDone: () => void }>({ done: null, markDone: () => {} });
 export const useOnboarding = () => useContext(OnboardingContext);
 
 export default function RootLayout() {
@@ -52,7 +52,7 @@ export default function RootLayout() {
   }
 
   return (
-    <OnboardingContext.Provider value={{ done: onboardingDone }}>
+    <OnboardingContext.Provider value={{ done: onboardingDone, markDone: () => setOnboardingDone(true) }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(tabs)" />
