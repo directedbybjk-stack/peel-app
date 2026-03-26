@@ -135,8 +135,10 @@ export default function SearchScreen() {
                   {item.imageUrl ? (
                     <Image source={{ uri: item.imageUrl }} style={styles.resultImage} />
                   ) : (
-                    <View style={[styles.resultImage, styles.placeholder]}>
-                      <Ionicons name="image-outline" size={20} color="#D1D5DB" />
+                    <View style={[styles.resultImage, styles.brandPlaceholder]}>
+                      <Text style={styles.brandInitial}>
+                        {(item.brand || item.productName || '?').charAt(0).toUpperCase()}
+                      </Text>
                     </View>
                   )}
                   <View style={styles.resultInfo}>
@@ -326,6 +328,11 @@ const styles = StyleSheet.create({
   productBrand: { fontSize: 12, color: '#9CA3AF', paddingHorizontal: 2 },
 
   placeholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#F3F4F6' },
+  brandPlaceholder: {
+    alignItems: 'center', justifyContent: 'center',
+    backgroundColor: '#F0FDF4',
+  },
+  brandInitial: { fontSize: 24, fontWeight: '800', color: '#16A34A' },
 
   // Search Results
   resultsList: { paddingHorizontal: 20, paddingBottom: 120, gap: 10 },

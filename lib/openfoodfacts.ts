@@ -236,17 +236,92 @@ function generateAnalysis(
   return parts.join(' ');
 }
 
-export async function searchProducts(
-  query: string
-): Promise<
-  Array<{
-    barcode: string;
-    productName: string;
-    brand: string;
-    imageUrl?: string;
-    nutriscoreGrade?: string;
-  }>
-> {
+// Quick image lookup from Open Food Facts by barcode (returns url or undefined)
+async function getOFFImage(barcode: string): Promise<string | undefined> {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 4000);
+    const res = await fetch(
+      `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=image_front_url,image_front_small_url`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeout);
+    if (!res.ok) return undefined;
+    const data = await res.json();
+    if (data.status !== 1) return undefined;
+    return data.product?.image_front_small_url || data.product?.image_front_url;
+  } catch {
+    return undefined;
+  }
+}
+
+type SearchResult = {
+  barcode: string;
+  productName: string;
+  brand: string;
+  imageUrl?: string;
+  nutriscoreGrade?: string;
+};
+
+export async function searchProducts(query: string): Promise<SearchResult[]> {
+  // Primary: USDA FoodData Central — always available, every US food product
+  try {
+    const url = `https://api.nal.usda.gov/fdc/v1/foods/search?query=${encodeURIComponent(
+      query
+    )}&api_key=DEMO_KEY&dataType=Branded&pageSize=25&sortBy=dataType.keyword&sortOrder=desc`;
+    console.log('[Search] USDA query:', query, url);
+    const usdaRes = await fetch(url);
+    console.log('[Search] USDA status:', usdaRes.status);
+    if (usdaRes.ok) {
+      const usdaData = await usdaRes.json();
+      const foods = usdaData.foods || [];
+      console.log('[Search] USDA foods count:', foods.length);
+      if (foods.length > 0) {
+        // Deduplicate by brand+name
+        const seen = new Set<string>();
+        const results: SearchResult[] = [];
+
+        for (const f of foods) {
+          const rawName = f.description || 'Unknown';
+          const brandName = f.brandName || f.brandOwner || 'Unknown';
+          const key = `${brandName}|${rawName}`.toLowerCase();
+          if (seen.has(key)) continue;
+          seen.add(key);
+
+          const barcode = f.gtinUpc || f.fdcId?.toString() || '';
+
+          // Clean up product name — USDA uses ALL CAPS
+          const productName = rawName
+            .split(',')
+            .slice(0, 2)
+            .join(',')
+            .trim()
+            .replace(/\b\w+/g, (w: string) =>
+              w.length <= 2 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
+            );
+
+          results.push({ barcode, productName, brand: brandName });
+          if (results.length >= 15) break;
+        }
+
+        // Fetch images from Open Food Facts in parallel for top results
+        const imagePromises = results
+          .filter((r) => r.barcode.length >= 8)
+          .slice(0, 8)
+          .map(async (r) => {
+            const img = await getOFFImage(r.barcode);
+            if (img) r.imageUrl = img;
+          });
+        await Promise.allSettled(imagePromises);
+
+        return results;
+      }
+    }
+  } catch (e) {
+    console.log('[Search] USDA error:', e);
+  }
+
+  // Fallback: Open Food Facts search (when USDA is unavailable)
   try {
     const res = await fetch(
       `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(
@@ -254,6 +329,8 @@ export async function searchProducts(
       )}&search_simple=1&action=process&json=1&page_size=20`
     );
     if (!res.ok) return [];
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('json')) return [];
     const data = await res.json();
     return (data.products || []).map((p: any) => ({
       barcode: p.code || p._id,
