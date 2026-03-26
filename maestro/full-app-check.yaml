@@ -1,0 +1,33 @@
+appId: com.anonymous.peel-app
+---
+- launchApp
+- waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Open in \"Expo Go\"?"
+    commands:
+      - tapOn: "Open"
+      - waitForAnimationToEnd
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+# Home tab
+- takeScreenshot: "screen-home"
+# Search tab
+- tapOn:
+    point: "30%,95%"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "screen-search"
+# History tab
+- tapOn:
+    point: "70%,95%"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "screen-history"
+# Profile tab
+- tapOn:
+    point: "90%,95%"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "screen-profile"

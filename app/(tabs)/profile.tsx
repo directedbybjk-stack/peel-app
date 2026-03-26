@@ -104,7 +104,7 @@ export default function ProfileScreen() {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.avatar} testID="profile-avatar">
-            <Text style={styles.avatarEmoji}>🥒</Text>
+            <Ionicons name="person" size={36} color={brand.primary} />
           </View>
           <Text style={styles.name}>Peel User</Text>
           <Text style={styles.email}>Free Plan</Text>
@@ -405,7 +405,7 @@ export default function ProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: { flex: 1, backgroundColor: '#F5F7F5' },
   content: { paddingTop: 60, paddingHorizontal: 20, paddingBottom: 120 },
 
   // Header
@@ -415,7 +415,6 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', marginBottom: 12,
     borderWidth: 3, borderColor: brand.primary,
   },
-  avatarEmoji: { fontSize: 36 },
   name: { fontSize: 22, fontWeight: '800', color: '#111827' },
   email: { fontSize: 14, color: '#9CA3AF', marginTop: 4 },
 
