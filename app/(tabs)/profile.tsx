@@ -296,42 +296,44 @@ export default function ProfileScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setActiveSheet(null)}
       >
-        <SafeAreaView style={styles.sheetContainer}>
+        <View style={styles.sheetContainer}>
           <View style={styles.sheetHandle} />
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Dietary Preferences</Text>
-            <Pressable testID="goals-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn}>
-              <Ionicons name="close" size={20} color="#6B7280" />
+          <View style={styles.sheetContent}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Dietary Preferences</Text>
+              <Pressable testID="goals-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn} hitSlop={12}>
+                <Ionicons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+            <Text style={styles.sheetSubtitle}>What are your health goals?</Text>
+            <View style={styles.sheetChips}>
+              {GOAL_OPTIONS.map((g) => {
+                const selected = editGoals.includes(g.id);
+                return (
+                  <Pressable
+                    key={g.id}
+                    testID={`edit-goal-${g.id}`}
+                    style={[styles.selectChip, selected && styles.selectChipActive]}
+                    onPress={() => setEditGoals(toggleInList(editGoals, g.id))}
+                  >
+                    <Text style={[styles.selectChipText, selected && styles.selectChipTextActive]}>
+                      {g.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable
+              testID="goals-save"
+              style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
+              onPress={saveAndClose}
+            >
+              <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
+                <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+              </LinearGradient>
             </Pressable>
           </View>
-          <Text style={styles.sheetSubtitle}>What are your health goals?</Text>
-          <View style={styles.sheetChips}>
-            {GOAL_OPTIONS.map((g) => {
-              const selected = editGoals.includes(g.id);
-              return (
-                <Pressable
-                  key={g.id}
-                  testID={`edit-goal-${g.id}`}
-                  style={[styles.selectChip, selected && styles.selectChipActive]}
-                  onPress={() => setEditGoals(toggleInList(editGoals, g.id))}
-                >
-                  <Text style={[styles.selectChipText, selected && styles.selectChipTextActive]}>
-                    {g.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Pressable
-            testID="goals-save"
-            style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
-            onPress={saveAndClose}
-          >
-            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
-              <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
-            </LinearGradient>
-          </Pressable>
-        </SafeAreaView>
+        </View>
       </Modal>
 
       {/* Allergies Sheet */}
@@ -341,42 +343,44 @@ export default function ProfileScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setActiveSheet(null)}
       >
-        <SafeAreaView style={styles.sheetContainer}>
+        <View style={styles.sheetContainer}>
           <View style={styles.sheetHandle} />
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Allergies & Sensitivities</Text>
-            <Pressable testID="allergies-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn}>
-              <Ionicons name="close" size={20} color="#6B7280" />
+          <View style={styles.sheetContent}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Allergies & Sensitivities</Text>
+              <Pressable testID="allergies-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn} hitSlop={12}>
+                <Ionicons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+            <Text style={styles.sheetSubtitle}>Select any food allergies or sensitivities</Text>
+            <View style={styles.sheetChips}>
+              {ALLERGY_OPTIONS.map((a) => {
+                const selected = editAllergies.includes(a.id);
+                return (
+                  <Pressable
+                    key={a.id}
+                    testID={`edit-allergy-${a.id}`}
+                    style={[styles.selectChip, selected && styles.selectChipDanger]}
+                    onPress={() => setEditAllergies(toggleInList(editAllergies, a.id))}
+                  >
+                    <Text style={[styles.selectChipText, selected && styles.selectChipTextDanger]}>
+                      {a.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <Pressable
+              testID="allergies-save"
+              style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
+              onPress={saveAndClose}
+            >
+              <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
+                <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+              </LinearGradient>
             </Pressable>
           </View>
-          <Text style={styles.sheetSubtitle}>Select any food allergies or sensitivities</Text>
-          <View style={styles.sheetChips}>
-            {ALLERGY_OPTIONS.map((a) => {
-              const selected = editAllergies.includes(a.id);
-              return (
-                <Pressable
-                  key={a.id}
-                  testID={`edit-allergy-${a.id}`}
-                  style={[styles.selectChip, selected && styles.selectChipDanger]}
-                  onPress={() => setEditAllergies(toggleInList(editAllergies, a.id))}
-                >
-                  <Text style={[styles.selectChipText, selected && styles.selectChipTextDanger]}>
-                    {a.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-          <Pressable
-            testID="allergies-save"
-            style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
-            onPress={saveAndClose}
-          >
-            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
-              <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
-            </LinearGradient>
-          </Pressable>
-        </SafeAreaView>
+        </View>
       </Modal>
 
       {/* Personalized Analysis Sheet */}
@@ -386,63 +390,65 @@ export default function ProfileScreen() {
         presentationStyle="pageSheet"
         onRequestClose={() => setActiveSheet(null)}
       >
-        <SafeAreaView style={styles.sheetContainer}>
+        <View style={styles.sheetContainer}>
           <View style={styles.sheetHandle} />
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Personalized Analysis</Text>
-            <Pressable testID="analysis-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn}>
-              <Ionicons name="close" size={20} color="#6B7280" />
+          <View style={styles.sheetContent}>
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Personalized Analysis</Text>
+              <Pressable testID="analysis-close" onPress={() => setActiveSheet(null)} style={styles.sheetCloseBtn} hitSlop={12}>
+                <Ionicons name="close" size={20} color="#6B7280" />
+              </Pressable>
+            </View>
+
+            <Text style={styles.sheetSubtitle}>What do you want to avoid most?</Text>
+            <View style={styles.sheetChips}>
+              {ANALYSIS_AVOID.map((a) => {
+                const selected = editAvoid.includes(a.id);
+                return (
+                  <Pressable
+                    key={a.id}
+                    testID={`avoid-${a.id}`}
+                    style={[styles.selectChip, selected && styles.selectChipActive]}
+                    onPress={() => setEditAvoid(toggleInList(editAvoid, a.id))}
+                  >
+                    <Text style={[styles.selectChipText, selected && styles.selectChipTextActive]}>
+                      {a.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Text style={[styles.sheetSubtitle, { marginTop: 8 }]}>Who are you shopping for?</Text>
+            <View style={styles.sheetChips}>
+              {SHOPPING_FOR.map((s) => {
+                const selected = editShoppingFor === s.id;
+                return (
+                  <Pressable
+                    key={s.id}
+                    testID={`shopping-${s.id}`}
+                    style={[styles.selectChip, selected && styles.selectChipActive]}
+                    onPress={() => setEditShoppingFor(s.id)}
+                  >
+                    <Text style={[styles.selectChipText, selected && styles.selectChipTextActive]}>
+                      {s.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            <Pressable
+              testID="analysis-save"
+              style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
+              onPress={() => setActiveSheet(null)}
+            >
+              <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
+                <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
+              </LinearGradient>
             </Pressable>
           </View>
-
-          <Text style={styles.sheetSubtitle}>What do you want to avoid most?</Text>
-          <View style={styles.sheetChips}>
-            {ANALYSIS_AVOID.map((a) => {
-              const selected = editAvoid.includes(a.id);
-              return (
-                <Pressable
-                  key={a.id}
-                  testID={`avoid-${a.id}`}
-                  style={[styles.selectChip, selected && styles.selectChipActive]}
-                  onPress={() => setEditAvoid(toggleInList(editAvoid, a.id))}
-                >
-                  <Text style={[styles.selectChipText, selected && styles.selectChipTextActive]}>
-                    {a.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.sheetSubtitle, { marginTop: 24 }]}>Who are you shopping for?</Text>
-          <View style={styles.sheetChips}>
-            {SHOPPING_FOR.map((s) => {
-              const selected = editShoppingFor === s.id;
-              return (
-                <Pressable
-                  key={s.id}
-                  testID={`shopping-${s.id}`}
-                  style={[styles.selectChip, selected && styles.selectChipActive]}
-                  onPress={() => setEditShoppingFor(s.id)}
-                >
-                  <Text style={[styles.selectChipText, selected && styles.selectChipTextActive]}>
-                    {s.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
-
-          <Pressable
-            testID="analysis-save"
-            style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
-            onPress={() => setActiveSheet(null)}
-          >
-            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.sheetSaveBtn}>
-              <Text style={styles.sheetSaveBtnText}>Save Changes</Text>
-            </LinearGradient>
-          </Pressable>
-        </SafeAreaView>
+        </View>
       </Modal>
     </View>
   );
@@ -524,10 +530,15 @@ const styles = StyleSheet.create({
   version: { textAlign: 'center', fontSize: 13, color: '#D1D5DB', marginTop: 16 },
 
   // Sheet
-  sheetContainer: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 20, paddingTop: 8 },
+  sheetContainer: { flex: 1, backgroundColor: '#FFFFFF', paddingHorizontal: 0, paddingTop: 16 },
+  sheetContent: { flex: 1, paddingHorizontal: 28 },
   sheetHandle: {
     width: 36, height: 4, borderRadius: 2, backgroundColor: '#E5E7EB',
     alignSelf: 'center', marginBottom: 16,
+  },
+  sheetDragHandle: {
+    width: 36, height: 5, borderRadius: 3, backgroundColor: '#E5E7EB',
+    alignSelf: 'center', marginBottom: 20,
   },
   sheetHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
@@ -538,11 +549,11 @@ const styles = StyleSheet.create({
     width: 32, height: 32, borderRadius: 16, backgroundColor: '#F3F4F6',
     alignItems: 'center', justifyContent: 'center',
   },
-  sheetSubtitle: { fontSize: 15, color: '#6B7280', marginBottom: 16 },
-  sheetChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  sheetSubtitle: { fontSize: 15, color: '#9CA3AF', marginBottom: 20 },
+  sheetChips: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 32 },
   selectChip: {
-    borderRadius: 22, paddingVertical: 10, paddingHorizontal: 18,
-    borderWidth: 1.5, borderColor: '#E5E7EB', backgroundColor: '#FFFFFF',
+    borderRadius: 24, paddingVertical: 12, paddingHorizontal: 20,
+    borderWidth: 1.5, borderColor: '#E5E7EB', backgroundColor: '#FAFAFA',
   },
   selectChipActive: {
     borderColor: brand.primary, backgroundColor: '#F0FDF4',
@@ -550,12 +561,13 @@ const styles = StyleSheet.create({
   selectChipDanger: {
     borderColor: brand.danger, backgroundColor: '#FEF2F2',
   },
-  selectChipText: { fontSize: 15, fontWeight: '600', color: '#374151' },
-  selectChipTextActive: { color: brand.primary },
-  selectChipTextDanger: { color: brand.danger },
+  selectChipText: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
+  selectChipTextActive: { color: brand.primary, fontWeight: '700' },
+  selectChipTextDanger: { color: brand.danger, fontWeight: '700' },
   sheetSaveBtn: {
-    borderRadius: 16, paddingVertical: 16,
+    borderRadius: 16, paddingVertical: 18,
     alignItems: 'center', marginTop: 'auto', marginBottom: 20,
+    shadowColor: '#16A34A', shadowOpacity: 0.3, shadowRadius: 8, shadowOffset: { width: 0, height: 4 },
   },
   sheetSaveBtnText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
 });
