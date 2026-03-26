@@ -1,0 +1,46 @@
+appId: com.anonymous.peel-app
+---
+- launchApp:
+    clearState: true
+- waitForAnimationToEnd
+- assertVisible:
+    id: "get-started-button"
+- takeScreenshot: "01-welcome"
+- tapOn:
+    id: "get-started-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- assertVisible:
+    id: "goal-seed_oils"
+- takeScreenshot: "02-goals"
+- tapOn:
+    id: "goal-seed_oils"
+- tapOn:
+    id: "goal-general_health"
+- takeScreenshot: "03-goals-selected"
+- tapOn:
+    id: "goals-continue-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- assertVisible:
+    id: "allergy-gluten"
+- takeScreenshot: "04-allergies"
+- tapOn:
+    id: "allergy-gluten"
+- tapOn:
+    id: "allergy-dairy"
+- takeScreenshot: "05-allergies-selected"
+- tapOn:
+    id: "allergies-continue-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "06-demo"
+- extendedWaitUntil:
+    visible:
+      id: "start-scanning-button"
+    timeout: 15000
+- tapOn:
+    id: "start-scanning-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "07-home-after-onboarding"

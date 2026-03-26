@@ -1,0 +1,6 @@
+appId: com.anonymous.peel-app
+---
+- launchApp
+- waitForAnimationToEnd
+- assertVisible: "Tab One"
+- takeScreenshot: "app-launched-tab-one"
