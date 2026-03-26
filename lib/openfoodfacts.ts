@@ -236,23 +236,43 @@ function generateAnalysis(
   return parts.join(' ');
 }
 
+// Normalize barcode — strip leading zeros beyond 13 digits, ensure minimum length
+function normalizeBarcode(barcode: string): string {
+  // Remove non-digit characters
+  const digits = barcode.replace(/\D/g, '');
+  // USDA sometimes returns 14-digit GTINs — strip leading zero to get 13-digit EAN
+  if (digits.length === 14 && digits.startsWith('0')) return digits.slice(1);
+  return digits;
+}
+
 // Quick image lookup from Open Food Facts by barcode (returns url or undefined)
 async function getOFFImage(barcode: string): Promise<string | undefined> {
-  try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 4000);
-    const res = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${barcode}.json?fields=image_front_url,image_front_small_url`,
-      { signal: controller.signal }
-    );
-    clearTimeout(timeout);
-    if (!res.ok) return undefined;
-    const data = await res.json();
-    if (data.status !== 1) return undefined;
-    return data.product?.image_front_small_url || data.product?.image_front_url;
-  } catch {
-    return undefined;
+  const normalized = normalizeBarcode(barcode);
+  if (normalized.length < 8) return undefined;
+
+  // Try both the normalized barcode and original
+  const codesToTry = [normalized];
+  if (normalized !== barcode.replace(/\D/g, '')) {
+    codesToTry.push(barcode.replace(/\D/g, ''));
   }
+
+  for (const code of codesToTry) {
+    try {
+      const controller = new AbortController();
+      const tm = setTimeout(() => controller.abort(), 5000);
+      const res = await fetch(
+        `https://world.openfoodfacts.org/api/v2/product/${code}.json?fields=image_front_url,image_front_small_url`,
+        { signal: controller.signal }
+      );
+      clearTimeout(tm);
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.status !== 1) continue;
+      const img = data.product?.image_front_small_url || data.product?.image_front_url;
+      if (img) return img;
+    } catch {}
+  }
+  return undefined;
 }
 
 type SearchResult = {
@@ -275,23 +295,36 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
     if (usdaRes.ok) {
       const usdaData = await usdaRes.json();
       const foods = usdaData.foods || [];
-      console.log('[Search] USDA foods count:', foods.length);
       if (foods.length > 0) {
-        // Deduplicate by brand+name
-        const seen = new Set<string>();
-        const results: SearchResult[] = [];
+        // Deduplicate aggressively by brand — only keep one product per brand
+        // so we don't show 6 "Core Power" variants
+        const seenBrands = new Set<string>();
+        const candidates: Array<{ barcode: string; rawName: string; brand: string }> = [];
 
         for (const f of foods) {
           const rawName = f.description || 'Unknown';
           const brandName = f.brandName || f.brandOwner || 'Unknown';
-          const key = `${brandName}|${rawName}`.toLowerCase();
-          if (seen.has(key)) continue;
-          seen.add(key);
+          const brandKey = brandName.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+          // Allow max 2 products per brand
+          const brandCount = candidates.filter(
+            (c) => c.brand.toLowerCase().replace(/[^a-z0-9]/g, '') === brandKey
+          ).length;
+          if (brandCount >= 2) continue;
+
+          // Skip exact duplicates
+          const exactKey = `${brandKey}|${rawName}`.toLowerCase();
+          if (seenBrands.has(exactKey)) continue;
+          seenBrands.add(exactKey);
 
           const barcode = f.gtinUpc || f.fdcId?.toString() || '';
+          candidates.push({ barcode, rawName, brand: brandName });
+          if (candidates.length >= 20) break;
+        }
 
-          // Clean up product name — USDA uses ALL CAPS
-          const productName = rawName
+        // Fetch images from Open Food Facts in parallel
+        const results: SearchResult[] = candidates.map((c) => {
+          const productName = c.rawName
             .split(',')
             .slice(0, 2)
             .join(',')
@@ -299,22 +332,26 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
             .replace(/\b\w+/g, (w: string) =>
               w.length <= 2 ? w.toUpperCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()
             );
+          return { barcode: c.barcode, productName, brand: c.brand };
+        });
 
-          results.push({ barcode, productName, brand: brandName });
-          if (results.length >= 15) break;
-        }
-
-        // Fetch images from Open Food Facts in parallel for top results
         const imagePromises = results
           .filter((r) => r.barcode.length >= 8)
-          .slice(0, 8)
+          .slice(0, 12)
           .map(async (r) => {
             const img = await getOFFImage(r.barcode);
             if (img) r.imageUrl = img;
           });
         await Promise.allSettled(imagePromises);
 
-        return results;
+        // Sort: products WITH images first, then without
+        results.sort((a, b) => {
+          if (a.imageUrl && !b.imageUrl) return -1;
+          if (!a.imageUrl && b.imageUrl) return 1;
+          return 0;
+        });
+
+        return results.slice(0, 15);
       }
     }
   } catch (e) {
