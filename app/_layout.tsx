@@ -2,7 +2,7 @@ import { useEffect, useState, createContext, useContext } from 'react';
 import { LogBox } from 'react-native';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Slot, router, useSegments } from 'expo-router';
+import { Stack, router, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 
@@ -54,7 +54,12 @@ export default function RootLayout() {
   return (
     <OnboardingContext.Provider value={{ done: onboardingDone }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-        <Slot />
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="onboarding" />
+          <Stack.Screen name="product/[barcode]" options={{ presentation: 'card', gestureEnabled: true }} />
+          <Stack.Screen name="paywall" options={{ presentation: 'modal', gestureEnabled: true }} />
+        </Stack>
       </ThemeProvider>
     </OnboardingContext.Provider>
   );

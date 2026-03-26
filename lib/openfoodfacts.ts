@@ -43,15 +43,32 @@ const BAD_ADDITIVES = [
 ];
 
 export async function lookupProduct(barcode: string): Promise<ProductData | null> {
-  try {
-    const res = await fetch(
-      `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`
-    );
-    if (!res.ok) return null;
-    const data = await res.json();
-    if (data.status !== 1 || !data.product) return null;
+  // Try multiple barcode formats — USDA uses 14-digit GTIN, OFF uses 13-digit EAN
+  const codesToTry = [barcode];
+  const normalized = normalizeBarcode(barcode);
+  if (normalized !== barcode) codesToTry.push(normalized);
+  // Also try without leading zeros
+  const stripped = barcode.replace(/^0+/, '');
+  if (stripped !== barcode && stripped !== normalized) codesToTry.push(stripped);
 
-    const p = data.product;
+  for (const code of codesToTry) {
+    try {
+      const res = await fetch(
+        `https://world.openfoodfacts.org/api/v2/product/${code}.json`
+      );
+      if (!res.ok) continue;
+      const data = await res.json();
+      if (data.status !== 1 || !data.product) continue;
+
+      // Found it — use this code
+      barcode = code;
+      return parseOFFProduct(barcode, data.product);
+    } catch {}
+  }
+  return null;
+}
+
+function parseOFFProduct(barcode: string, p: any): ProductData {
     const ingredientsText = (p.ingredients_text || '').toLowerCase();
     const ingredientsList: string[] = (p.ingredients || []).map(
       (i: any) => i.text || i.id || ''
@@ -174,9 +191,6 @@ export async function lookupProduct(barcode: string): Promise<ProductData | null
       analysis,
       flags,
     };
-  } catch {
-    return null;
-  }
 }
 
 function generateAnalysis(
