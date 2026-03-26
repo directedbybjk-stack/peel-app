@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, createContext, useContext } from 'react';
 import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { useFonts } from 'expo-font';
-import { Stack, router } from 'expo-router';
+import { Slot, router, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 
@@ -12,55 +12,47 @@ export { ErrorBoundary } from 'expo-router';
 
 SplashScreen.preventAutoHideAsync();
 
+const OnboardingContext = createContext<{ done: boolean | null }>({ done: null });
+export const useOnboarding = () => useContext(OnboardingContext);
+
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null);
+  const colorScheme = useColorScheme();
+  const segments = useSegments();
 
   useEffect(() => {
     if (error) throw error;
   }, [error]);
 
   useEffect(() => {
-    isOnboardingComplete().then((done) => {
-      setOnboardingDone(done);
-    });
+    isOnboardingComplete().then(setOnboardingDone);
   }, []);
 
   useEffect(() => {
-    if (loaded && onboardingDone !== null) {
-      SplashScreen.hideAsync();
-      if (!onboardingDone) {
-        router.replace('/onboarding');
-      }
+    if (!loaded || onboardingDone === null) return;
+    SplashScreen.hideAsync();
+
+    const inOnboarding = segments[0] === 'onboarding';
+
+    if (!onboardingDone && !inOnboarding) {
+      router.replace('/onboarding');
+    } else if (onboardingDone && inOnboarding) {
+      router.replace('/(tabs)');
     }
-  }, [loaded, onboardingDone]);
+  }, [loaded, onboardingDone, segments]);
 
   if (!loaded || onboardingDone === null) {
     return null;
   }
 
-  return <RootLayoutNav initialRoute={onboardingDone ? '(tabs)' : 'onboarding'} />;
-}
-
-function RootLayoutNav({ initialRoute }: { initialRoute: string }) {
-  const colorScheme = useColorScheme();
-
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="onboarding" options={{ headerShown: false }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen
-          name="product/[barcode]"
-          options={{
-            headerShown: true,
-            title: 'Product Details',
-            headerBackTitle: 'Back',
-          }}
-        />
-      </Stack>
-    </ThemeProvider>
+    <OnboardingContext.Provider value={{ done: onboardingDone }}>
+      <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+        <Slot />
+      </ThemeProvider>
+    </OnboardingContext.Provider>
   );
 }
