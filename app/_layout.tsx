@@ -65,9 +65,9 @@ export default function RootLayout() {
               headerShown: true,
               headerTitle: '',
               headerBackTitle: 'Back',
-              headerTransparent: true,
               headerTintColor: '#374151',
               headerShadowVisible: false,
+              headerStyle: { backgroundColor: '#F5F7F5' },
             }}
           />
           <Stack.Screen name="paywall" options={{ presentation: 'modal', gestureEnabled: true }} />

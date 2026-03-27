@@ -5,14 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { brand } from '@/constants/Colors';
 import { lookupProduct, searchProducts, type ProductData } from '@/lib/openfoodfacts';
-import { addToScanHistory } from '@/lib/storage';
+import { addToScanHistory, addToPantry, removeFromPantry, isInPantry } from '@/lib/storage';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 export default function ProductDetailScreen() {
-  const { barcode } = useLocalSearchParams<{ barcode: string }>();
+  const { barcode, fromScan } = useLocalSearchParams<{ barcode: string; fromScan?: string }>();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -22,25 +22,49 @@ export default function ProductDetailScreen() {
 
   useEffect(() => {
     if (!barcode) return;
+    let cancelled = false;
+
+    // Timeout after 10 seconds
+    const timeout = setTimeout(() => {
+      if (!cancelled && loading) {
+        setError(true);
+        setLoading(false);
+      }
+    }, 10000);
+
+    // Check pantry status
+    isInPantry(barcode).then(setInPantry);
+
     lookupProduct(barcode).then(async (p) => {
+      if (cancelled) return;
+      clearTimeout(timeout);
       if (p) {
         setProduct(p);
-        await addToScanHistory({
-          barcode: p.barcode, productName: p.productName, brand: p.brand,
-          score: p.score, imageUrl: p.imageUrl, scannedAt: new Date().toISOString(),
-        });
+        // Only add to history if coming from barcode scanner
+        if (fromScan === '1') {
+          await addToScanHistory({
+            barcode: p.barcode, productName: p.productName, brand: p.brand,
+            score: p.score, imageUrl: p.imageUrl, scannedAt: new Date().toISOString(),
+          });
+        }
+        // Load alternatives in background — don't block UI
         if (p.categories) {
           const cat = p.categories.split(',')[0]?.trim();
           if (cat) {
-            const alts = await searchProducts(`organic ${cat}`);
-            setAlternatives(alts.filter((a) => a.barcode !== barcode).slice(0, 6));
+            searchProducts(`organic ${cat}`).then((alts) => {
+              if (!cancelled) setAlternatives(alts.filter((a) => a.barcode !== barcode).slice(0, 6));
+            }).catch(() => {});
           }
         }
       } else {
         setError(true);
       }
       setLoading(false);
+    }).catch(() => {
+      if (!cancelled) { setError(true); setLoading(false); }
     });
+
+    return () => { cancelled = true; clearTimeout(timeout); };
   }, [barcode]);
 
   const toggleSection = (key: string) => {
@@ -51,9 +75,23 @@ export default function ProductDetailScreen() {
   const getScoreColor = (s: number) => s >= 80 ? brand.score.excellent : s >= 60 ? brand.score.good : s >= 30 ? brand.score.limit : brand.score.avoid;
   const getScoreBg = (s: number): [string, string] => s >= 80 ? ['#DCFCE7', '#BBF7D0'] : s >= 60 ? ['#DCFCE7', '#D1FAE5'] : s >= 30 ? ['#FEF3C7', '#FDE68A'] : ['#FEE2E2', '#FECACA'];
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!product) return;
-    await Share.share({ message: `${product.productName} scored ${product.score}/100 (${product.scoreLabel}) on Peel` });
+    Share.share({ message: `${product.productName} scored ${product.score}/100 (${product.scoreLabel}) on Peel` }).catch(() => {});
+  };
+
+  const handlePantryToggle = async () => {
+    if (!product) return;
+    if (inPantry) {
+      await removeFromPantry(product.barcode);
+      setInPantry(false);
+    } else {
+      await addToPantry({
+        barcode: product.barcode, productName: product.productName, brand: product.brand,
+        score: product.score, imageUrl: product.imageUrl, scannedAt: new Date().toISOString(),
+      });
+      setInPantry(true);
+    }
   };
 
   if (loading) {
@@ -113,7 +151,7 @@ export default function ProductDetailScreen() {
           <Pressable
             testID="pantry-button"
             style={({ pressed }) => [styles.actionBtn, inPantry && styles.actionBtnActive, pressed && { transform: [{ scale: 0.97 }] }]}
-            onPress={() => setInPantry(!inPantry)}
+            onPress={handlePantryToggle}
           >
             <Ionicons
               name={inPantry ? 'checkmark-circle' : 'add-circle-outline'}

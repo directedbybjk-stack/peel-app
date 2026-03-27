@@ -37,7 +37,7 @@ export default function ScanScreen() {
     }
 
     await incrementScanCount();
-    router.push(`/product/${barcode}`);
+    router.push(`/product/${barcode}?fromScan=1`);
 
     setTimeout(() => {
       setScanned(false);

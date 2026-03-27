@@ -261,30 +261,6 @@ export default function HomeScreen() {
           </View>
         )}
 
-        {/* Upgrade CTA */}
-        <Pressable
-          testID="home-upgrade-button"
-          style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
-          onPress={() => router.push('/paywall')}
-        >
-          <LinearGradient
-            colors={['#16A34A', '#15803D']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.upgradeCTA}
-          >
-            <View style={styles.upgradeLeft}>
-              <View style={styles.upgradeIconWrap}>
-                <Ionicons name="flash" size={18} color="#FDE047" />
-              </View>
-              <View>
-                <Text style={styles.upgradeTitle}>Upgrade to Peel Pro</Text>
-                <Text style={styles.upgradeSubtitle}>Unlimited scans & personalized insights</Text>
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color="rgba(255,255,255,0.7)" />
-          </LinearGradient>
-        </Pressable>
       </ScrollView>
 
       {/* Score Info Modal */}

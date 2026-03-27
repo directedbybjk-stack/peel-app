@@ -4,6 +4,7 @@ import { Platform } from 'react-native';
 const ONBOARDING_KEY = 'peel_onboarding_complete';
 const PREFERENCES_KEY = 'peel_user_preferences';
 const SCAN_HISTORY_KEY = 'peel_scan_history';
+const PANTRY_KEY = 'peel_pantry';
 const SCAN_COUNT_KEY = 'peel_daily_scan_count';
 const SCAN_DATE_KEY = 'peel_daily_scan_date';
 
@@ -61,10 +62,36 @@ export async function getScanHistory(): Promise<ScanHistoryItem[]> {
 
 export async function addToScanHistory(item: ScanHistoryItem): Promise<void> {
   const history = await getScanHistory();
+  // Don't add duplicates from browsing — only add if not already the most recent
+  if (history.length > 0 && history[0].barcode === item.barcode) return;
   history.unshift(item);
-  // Keep last 500 scans
   if (history.length > 500) history.length = 500;
   await setItem(SCAN_HISTORY_KEY, JSON.stringify(history));
+}
+
+// Pantry
+export async function getPantry(): Promise<ScanHistoryItem[]> {
+  const val = await getItem(PANTRY_KEY);
+  if (!val) return [];
+  return JSON.parse(val);
+}
+
+export async function addToPantry(item: ScanHistoryItem): Promise<void> {
+  const pantry = await getPantry();
+  if (pantry.some((p) => p.barcode === item.barcode)) return;
+  pantry.unshift(item);
+  await setItem(PANTRY_KEY, JSON.stringify(pantry));
+}
+
+export async function removeFromPantry(barcode: string): Promise<void> {
+  const pantry = await getPantry();
+  const filtered = pantry.filter((p) => p.barcode !== barcode);
+  await setItem(PANTRY_KEY, JSON.stringify(filtered));
+}
+
+export async function isInPantry(barcode: string): Promise<boolean> {
+  const pantry = await getPantry();
+  return pantry.some((p) => p.barcode === barcode);
 }
 
 export async function getDailyScanCount(): Promise<number> {

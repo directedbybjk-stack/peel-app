@@ -5,17 +5,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { brand } from '@/constants/Colors';
-import { getScanHistory, type ScanHistoryItem } from '@/lib/storage';
+import { getScanHistory, getPantry, type ScanHistoryItem } from '@/lib/storage';
 
 type TabType = 'pantry' | 'history';
 
 export default function HistoryScreen() {
   const [history, setHistory] = useState<ScanHistoryItem[]>([]);
+  const [pantry, setPantry] = useState<ScanHistoryItem[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('history');
 
   useFocusEffect(
     useCallback(() => {
       getScanHistory().then(setHistory);
+      getPantry().then(setPantry);
     }, [])
   );
 
@@ -56,7 +58,40 @@ export default function HistoryScreen() {
       </View>
 
       {activeTab === 'pantry' ? (
-        /* My Pantry - Empty State */
+        pantry.length > 0 ? (
+          <FlatList
+            data={pantry}
+            keyExtractor={(_, i) => String(i)}
+            contentContainerStyle={styles.listContent}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => (
+              <Pressable
+                style={({ pressed }) => [styles.historyCard, pressed && { transform: [{ scale: 0.98 }] }]}
+                onPress={() => router.push(`/product/${item.barcode}`)}
+              >
+                {item.imageUrl ? (
+                  <Image source={{ uri: item.imageUrl }} style={styles.historyImage} />
+                ) : (
+                  <View style={[styles.historyImage, styles.placeholder]}>
+                    <Ionicons name="image-outline" size={22} color="#D1D5DB" />
+                  </View>
+                )}
+                <View style={styles.historyInfo}>
+                  <Text style={styles.historyName} numberOfLines={1}>{item.productName}</Text>
+                  <Text style={styles.historyBrand}>{item.brand}</Text>
+                  <View style={styles.historyScoreRow}>
+                    <View style={[styles.scoreDot, { backgroundColor: getScoreColor(item.score) }]} />
+                    <Text style={styles.historyScoreNum}>{item.score}/100</Text>
+                    <Text style={[styles.historyScoreLabel, { color: getScoreColor(item.score) }]}>
+                      {getScoreLabel(item.score)}
+                    </Text>
+                  </View>
+                </View>
+                <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+              </Pressable>
+            )}
+          />
+        ) : (
         <View style={styles.pantryEmpty}>
           <Text style={styles.pantryEmptyTitle}>Nothing in here...</Text>
           <Text style={styles.pantryEmptySubtitle}>
@@ -99,6 +134,7 @@ export default function HistoryScreen() {
             </View>
           </View>
         </View>
+        )
       ) : (
         /* History */
         history.length > 0 ? (
