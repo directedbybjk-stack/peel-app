@@ -1,44 +1,94 @@
-import { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Image, ActivityIndicator, LayoutAnimation, Platform, UIManager } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, Image, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeInDown } from 'react-native-reanimated';
+
 import { brand } from '@/constants/Colors';
 import { lookupProduct, type ProductData } from '@/lib/openfoodfacts';
 import { savePreferences } from '@/lib/storage';
 
-if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
-  UIManager.setLayoutAnimationEnabledExperimental(true);
-}
-
 const DEMO_BARCODES = ['0044000032197', '0028400064057', '0049000006346'];
+
+type StoryStep = 0 | 1 | 2 | 3;
+
+const COMPARISON_ITEMS = [
+  {
+    title: 'Then',
+    product: 'Original crackers',
+    badgeColor: '#3F6F49',
+    ingredients: 'Flour, butter, sugar, salt, baking soda',
+  },
+  {
+    title: 'Now',
+    product: 'Modern crackers',
+    badgeColor: '#A92B2B',
+    ingredients: 'Soybean oil, canola oil, high fructose corn syrup, soy lecithin, natural flavor',
+    highlight: true,
+  },
+];
+
+const FEELING_OPTIONS = [
+  'Sluggish & tired',
+  'Bloated',
+  'I do not eat these',
+];
 
 export default function DemoScreen() {
   const { goals, allergies } = useLocalSearchParams<{ goals: string; allergies: string }>();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [storyStep, setStoryStep] = useState<StoryStep>(0);
 
   useEffect(() => {
     async function tryBarcodes() {
       for (const barcode of DEMO_BARCODES) {
-        const p = await lookupProduct(barcode);
-        if (p) { setProduct(p); setLoading(false); return; }
+        const found = await lookupProduct(barcode);
+        if (found) {
+          setProduct(found);
+          setLoading(false);
+          return;
+        }
       }
       setLoading(false);
     }
     tryBarcodes();
   }, []);
 
-  const toggleSection = (key: string) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }));
-  };
+  const previewProduct = useMemo(() => {
+    if (product) {
+      return product;
+    }
 
-  const handleStart = async () => {
-    await savePreferences({ goal: goals || '', allergies: (allergies || '').split(',').filter(Boolean) });
-    router.replace('/paywall');
+    return {
+      barcode: '0044000032197',
+      productName: 'Classic Potato Chips',
+      brand: "Lay's",
+      imageUrl: undefined,
+      ingredients: 'Potatoes, vegetable oil (canola, corn, soybean, and/or sunflower oil), salt',
+      ingredientsList: ['potatoes', 'vegetable oil', 'canola oil', 'corn oil', 'soybean oil', 'sunflower oil', 'salt'],
+      categories: 'snacks, chips',
+      novaGroup: 4,
+      score: 16,
+      scoreLabel: 'Avoid',
+      analysis: 'Contains seed oils and high processing, making it a weaker everyday choice.',
+      flags: [],
+      hasSeedOils: true,
+      seedOilsFound: ['Sunflower oil', 'Canola oil'],
+      hasAdditives: true,
+      processingLevel: 'High',
+      allergens: ['Possible dairy', 'Possible soy'],
+      additives: ['Natural flavor'],
+    } as ProductData;
+  }, [product]);
+
+  const alternativeProduct = {
+    productName: 'Kettle Cooked Potato Chips',
+    brand: 'Siete',
+    score: 87,
+    scoreLabel: 'Excellent',
+    analysis: 'Made with avocado oil and simpler ingredients, making it a cleaner alternative to conventional chips.',
   };
 
   const getScoreColor = (score: number) => {
@@ -55,273 +105,207 @@ export default function DemoScreen() {
     return ['#FEE2E2', '#FECACA'];
   };
 
+  const handleContinue = async () => {
+    if (storyStep < 3) {
+      setStoryStep((prev) => (prev + 1) as StoryStep);
+      return;
+    }
+
+    await savePreferences({ goal: goals || '', allergies: (allergies || '').split(',').filter(Boolean) });
+    router.replace('/paywall');
+  };
+
+  const progressWidth = (((storyStep + 1) / 4) * 100) as number;
+
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Fixed header */}
       <View style={styles.header}>
         <View style={styles.progressTrack}>
-          <LinearGradient
-            colors={['#16A34A', '#22C55E']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={[styles.progressFill, { width: '100%' }]}
-          />
+          <LinearGradient colors={['#16A34A', '#22C55E']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={[styles.progressFill, { width: `${progressWidth}%` as const }]} />
         </View>
         <Text style={styles.step}>STEP 3 OF 3</Text>
-        <Text style={styles.title}>Scan a barcode.{'\n'}Know what is inside.</Text>
-        <Text style={styles.subtitle}>Peel turns a packaged food into a clear ingredient decision in seconds before you buy it.</Text>
       </View>
 
-      {/* Scrollable content */}
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        bounces={true}
-      >
+      <ScrollView style={styles.scrollView} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
         {loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#16A34A" />
-            <Text style={styles.loadingText}>Analyzing a real product...</Text>
+            <Text style={styles.loadingText}>Loading your Peel demo...</Text>
           </View>
-        ) : product ? (
+        ) : (
           <>
-            {/* Product Card */}
-            <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.productCard}>
-              <View style={styles.resultHeader}>
-                <Text style={styles.resultEyebrow}>REAL RESULT PREVIEW</Text>
-                <View style={styles.resultStatusBadge}>
-                  <Text style={styles.resultStatusText}>Analysis ready</Text>
-                </View>
-              </View>
-              <View style={styles.productRow}>
-                {product.imageUrl ? (
-                  <Image source={{ uri: product.imageUrl }} style={styles.productImage} />
-                ) : (
-                  <View style={[styles.productImage, styles.productImagePlaceholder]}>
-                    <Text style={{ fontSize: 11, color: '#94A3B8' }}>No Image</Text>
+            {storyStep === 0 && (
+              <Animated.View entering={FadeInDown.duration(350).springify()}>
+                <Text style={styles.title}>Avoiding bad ingredients can be tough...</Text>
+                <Text style={styles.subtitle}>Packaged foods look familiar, but what is inside them has changed.</Text>
+
+                <LinearGradient colors={['#DFF6E5', '#F7E6A6']} style={styles.storyBackdrop}>
+                  <View style={styles.comparisonRow}>
+                    {COMPARISON_ITEMS.map((item) => (
+                      <View key={item.title} style={styles.comparisonCard}>
+                        <View style={[styles.comparisonBadge, { backgroundColor: item.badgeColor }]}>
+                          <Text style={styles.comparisonBadgeText}>{item.title}</Text>
+                        </View>
+                        <View style={styles.comparisonImageWrap}>
+                          <Text style={styles.comparisonEmoji}>{item.title === 'Then' ? '🥫' : '📦'}</Text>
+                        </View>
+                        <Text style={styles.comparisonProduct}>{item.product}</Text>
+                        <Text style={[styles.comparisonIngredients, item.highlight && styles.comparisonIngredientsHighlight]}>
+                          {item.ingredients}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
-                )}
-                <View style={styles.productInfo}>
-                  <Text style={styles.productName} numberOfLines={2}>{product.productName}</Text>
-                  <Text style={styles.productBrand}>{product.brand}</Text>
-                  <LinearGradient colors={getScoreBg(product.score)} style={styles.scoreBadge}>
-                    <Text style={[styles.scoreNumber, { color: getScoreColor(product.score) }]}>{product.score}</Text>
-                    <Text style={[styles.scoreOf, { color: getScoreColor(product.score) }]}>/100</Text>
-                    <View style={styles.scoreDivider} />
-                    <Text style={[styles.scoreLabel, { color: getScoreColor(product.score) }]}>{product.scoreLabel}</Text>
-                  </LinearGradient>
-                </View>
-              </View>
-            </Animated.View>
-
-            <Animated.View entering={FadeInDown.delay(70).duration(400).springify()} style={styles.valueCard}>
-              <Text style={styles.valueTitle}>What Peel shows you instantly</Text>
-              <View style={styles.valueList}>
-                <ValueRow text={product.hasSeedOils ? 'Seed oils detected immediately' : 'Seed oil check in one tap'} />
-                <ValueRow text={`${product.processingLevel} processing profile, clearly labeled`} />
-                <ValueRow text={product.allergens.length > 0 ? `${product.allergens.length} allergen warnings flagged` : 'Allergen warnings when they appear'} />
-                <ValueRow text="Cleaner alternative decisions before checkout" />
-              </View>
-            </Animated.View>
-
-            {/* Analysis */}
-            <Animated.View entering={FadeInDown.delay(100).duration(400).springify()} style={styles.analysisCard}>
-              <View style={styles.analysisHeader}>
-                <View style={styles.analysisDot} />
-                <Text style={styles.analysisTitle}>Peel's Analysis</Text>
-              </View>
-              <Text style={styles.analysisText}>{product.analysis}</Text>
-            </Animated.View>
-
-            {/* Personalized Alerts */}
-            {product.flags.length > 0 && (
-              <Animated.View entering={FadeInDown.delay(200).duration(400).springify()} style={styles.alertsSection}>
-                <Text style={styles.sectionTitle}>PERSONALIZED ALERTS</Text>
-                {product.flags.map((flag, i) => (
-                  <View
-                    key={i}
-                    style={[styles.alertRow, {
-                      backgroundColor: flag.severity === 'danger' ? '#FEF2F2' : '#FFFBEB',
-                      borderLeftColor: flag.severity === 'danger' ? '#EF4444' : '#F59E0B',
-                    }]}
-                  >
-                    <View style={[styles.alertDot, { backgroundColor: flag.severity === 'danger' ? '#EF4444' : '#F59E0B' }]} />
-                    <Text style={styles.alertText}>{flag.label}</Text>
-                    <View style={[styles.alertBadge, { backgroundColor: flag.severity === 'danger' ? '#EF4444' : '#F59E0B' }]}>
-                      <Text style={styles.alertBadgeText}>!</Text>
-                    </View>
-                  </View>
-                ))}
+                  <Text style={styles.comparisonCaption}>because our food has changed.</Text>
+                </LinearGradient>
               </Animated.View>
             )}
 
-            {/* Breakdown */}
-            <Animated.View entering={FadeInDown.delay(300).duration(400).springify()} style={styles.breakdownCard}>
-              <Text style={styles.sectionTitle}>BREAKDOWN</Text>
+            {storyStep === 1 && (
+              <Animated.View entering={FadeInDown.duration(350).springify()}>
+                <Text style={styles.title}>See the impact of your choices</Text>
+                <Text style={styles.subtitle}>Some of the foods people eat every day are tied to how they feel after eating.</Text>
 
-              {/* Seed Oils */}
-              <Pressable style={styles.breakdownRow} onPress={() => toggleSection('seedOils')}>
-                <View style={styles.breakdownLeft}>
-                  <Text style={styles.breakdownLabel}>Seed Oils</Text>
-                  <View style={[styles.statusBadge, { backgroundColor: product.hasSeedOils ? '#FEE2E2' : '#DCFCE7' }]}>
-                    <Text style={[styles.statusText, { color: product.hasSeedOils ? '#DC2626' : '#16A34A' }]}>
-                      {product.hasSeedOils ? 'Present' : 'None'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.breakdownRight}>
-                  <View style={[styles.statusDot, { backgroundColor: product.hasSeedOils ? '#EF4444' : '#22C55E' }]} />
-                  <Text style={styles.chevron}>{expandedSections.seedOils ? '∧' : '∨'}</Text>
-                </View>
-              </Pressable>
-              {expandedSections.seedOils && (
-                <View style={styles.expandedContent}>
-                  {product.hasSeedOils ? (
-                    <>
-                      <Text style={styles.expandedLabel}>Seed oils found:</Text>
-                      <View style={styles.chipRow}>
-                        {product.seedOilsFound.map((oil, i) => (
-                          <View key={i} style={styles.dangerChip}>
-                            <Text style={styles.dangerChipText}>{oil}</Text>
-                          </View>
-                        ))}
-                      </View>
-                      <Text style={styles.expandedInfo}>
-                        Seed oils are high in omega-6 fatty acids and can promote inflammation when consumed in excess.
-                      </Text>
-                    </>
+                <LinearGradient colors={['#F4F8F0', '#DDF1DE']} style={styles.feelingPanel}>
+                  {previewProduct.imageUrl ? (
+                    <Image source={{ uri: previewProduct.imageUrl }} style={styles.heroProductImage} />
                   ) : (
-                    <Text style={styles.expandedInfo}>No seed oils detected in this product.</Text>
-                  )}
-                </View>
-              )}
-
-              <View style={styles.breakdownDivider} />
-
-              {/* Processing Profile */}
-              <Pressable style={styles.breakdownRow} onPress={() => toggleSection('processing')}>
-                <View style={styles.breakdownLeft}>
-                  <Text style={styles.breakdownLabel}>Processing Profile</Text>
-                  <View style={[styles.statusBadge, {
-                    backgroundColor: product.processingLevel === 'High' ? '#FEE2E2' : product.processingLevel === 'Medium' ? '#FEF3C7' : '#DCFCE7'
-                  }]}>
-                    <Text style={[styles.statusText, {
-                      color: product.processingLevel === 'High' ? '#DC2626' : product.processingLevel === 'Medium' ? '#D97706' : '#16A34A'
-                    }]}>
-                      {product.processingLevel}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.breakdownRight}>
-                  <View style={[styles.statusDot, {
-                    backgroundColor: product.processingLevel === 'High' ? '#EF4444' : product.processingLevel === 'Medium' ? '#F59E0B' : '#22C55E'
-                  }]} />
-                  <Text style={styles.chevron}>{expandedSections.processing ? '∧' : '∨'}</Text>
-                </View>
-              </Pressable>
-              {expandedSections.processing && (
-                <View style={styles.expandedContent}>
-                  <Text style={styles.expandedLabel}>Processing Level</Text>
-                  <View style={styles.processingBar}>
-                    <LinearGradient
-                      colors={['#22C55E', '#F59E0B', '#EF4444']}
-                      start={{ x: 0, y: 0 }}
-                      end={{ x: 1, y: 0 }}
-                      style={styles.processingBarGradient}
-                    />
-                    <View style={[styles.processingIndicator, {
-                      left: product.processingLevel === 'High' ? '85%' : product.processingLevel === 'Medium' ? '50%' : '15%'
-                    }]} />
-                  </View>
-                  <View style={styles.processingLabels}>
-                    <Text style={styles.processingLabelText}>Unprocessed</Text>
-                    <Text style={styles.processingLabelText}>Ultra-processed</Text>
-                  </View>
-                  {product.additives.length > 0 && (
-                    <>
-                      <Text style={[styles.expandedLabel, { marginTop: 16 }]}>Additives</Text>
-                      <View style={styles.chipRow}>
-                        {product.additives.slice(0, 8).map((add, i) => (
-                          <View key={i} style={styles.warningChip}>
-                            <Text style={styles.warningChipText}>{add}</Text>
-                          </View>
-                        ))}
-                      </View>
-                    </>
-                  )}
-                </View>
-              )}
-
-              <View style={styles.breakdownDivider} />
-
-              {/* Allergens */}
-              <Pressable style={styles.breakdownRow} onPress={() => toggleSection('allergens')}>
-                <View style={styles.breakdownLeft}>
-                  <Text style={styles.breakdownLabel}>Detected Allergens</Text>
-                  <View style={[styles.statusBadge, {
-                    backgroundColor: product.allergens.length > 0 ? '#FEF3C7' : '#F1F5F9'
-                  }]}>
-                    <Text style={[styles.statusText, {
-                      color: product.allergens.length > 0 ? '#D97706' : '#64748B'
-                    }]}>
-                      {product.allergens.length > 0 ? `${product.allergens.length} found` : 'No Data'}
-                    </Text>
-                  </View>
-                </View>
-                <View style={styles.breakdownRight}>
-                  <View style={[styles.statusDot, {
-                    backgroundColor: product.allergens.length > 0 ? '#F59E0B' : '#CBD5E1'
-                  }]} />
-                  <Text style={styles.chevron}>{expandedSections.allergens ? '∧' : '∨'}</Text>
-                </View>
-              </Pressable>
-              {expandedSections.allergens && (
-                <View style={styles.expandedContent}>
-                  {product.allergens.length > 0 ? (
-                    <View style={styles.chipRow}>
-                      {product.allergens.map((a, i) => (
-                        <View key={i} style={styles.warningChip}>
-                          <Text style={styles.warningChipText}>{a}</Text>
-                        </View>
-                      ))}
+                    <View style={[styles.heroProductImage, styles.heroProductPlaceholder]}>
+                      <Text style={styles.heroProductPlaceholderText}>Chips</Text>
                     </View>
-                  ) : (
-                    <Text style={styles.expandedInfo}>No allergen data available for this product.</Text>
                   )}
-                </View>
-              )}
-            </Animated.View>
+                  <Text style={styles.feelingQuestion}>How do these chips make you feel after eating them?</Text>
 
-            {/* Ingredients */}
-            <Animated.View entering={FadeInDown.delay(400).duration(400).springify()} style={styles.ingredientsCard}>
-              <Text style={styles.sectionTitle}>INGREDIENTS</Text>
-              <Text style={styles.ingredientsText}>{product.ingredients}</Text>
-            </Animated.View>
+                  <View style={styles.feelingOptions}>
+                    {FEELING_OPTIONS.map((option) => (
+                      <View key={option} style={styles.feelingOption}>
+                        <Text style={styles.feelingOptionText}>{option}</Text>
+                      </View>
+                    ))}
+                  </View>
+                </LinearGradient>
+              </Animated.View>
+            )}
+
+            {storyStep === 2 && (
+              <Animated.View entering={FadeInDown.duration(350).springify()}>
+                <Text style={styles.title}>Peel reveals a better option</Text>
+                <Text style={styles.subtitle}>Instead of guessing, Peel shows why one product is worth skipping and what to try instead.</Text>
+
+                <View style={styles.revealStack}>
+                  <View style={styles.resultPanel}>
+                    <Text style={styles.resultPanelEyebrow}>AND HERE'S WHY YOU SHOULDN'T</Text>
+                    <View style={styles.resultProductRow}>
+                      {previewProduct.imageUrl ? (
+                        <Image source={{ uri: previewProduct.imageUrl }} style={styles.resultProductImage} />
+                      ) : (
+                        <View style={[styles.resultProductImage, styles.heroProductPlaceholder]}>
+                          <Text style={styles.heroProductPlaceholderText}>Bad</Text>
+                        </View>
+                      )}
+                      <View style={styles.resultProductInfo}>
+                        <Text style={styles.resultProductName}>{previewProduct.productName}</Text>
+                        <Text style={styles.resultProductBrand}>{previewProduct.brand}</Text>
+                        <View style={styles.resultScoreRow}>
+                          <View style={[styles.scoreDot, { backgroundColor: getScoreColor(previewProduct.score) }]} />
+                          <Text style={[styles.resultScoreText, { color: getScoreColor(previewProduct.score) }]}>
+                            {previewProduct.score}/100 {previewProduct.scoreLabel}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <Text style={styles.resultReason}>{previewProduct.analysis}</Text>
+                  </View>
+
+                  <View style={styles.arrowWrap}>
+                    <Text style={styles.arrowText}>↓</Text>
+                    <Text style={styles.arrowLabel}>Reveal better alternative</Text>
+                  </View>
+
+                  <View style={[styles.resultPanel, styles.altResultPanel]}>
+                    <Text style={styles.resultPanelEyebrow}>TRY THIS INSTEAD</Text>
+                    <View style={styles.resultProductRow}>
+                      <View style={[styles.resultProductImage, styles.altProductIconWrap]}>
+                        <Text style={styles.altProductIcon}>🌮</Text>
+                      </View>
+                      <View style={styles.resultProductInfo}>
+                        <Text style={styles.resultProductName}>{alternativeProduct.productName}</Text>
+                        <Text style={styles.resultProductBrand}>{alternativeProduct.brand}</Text>
+                        <View style={styles.resultScoreRow}>
+                          <View style={[styles.scoreDot, { backgroundColor: '#16A34A' }]} />
+                          <Text style={[styles.resultScoreText, { color: '#15803D' }]}>
+                            {alternativeProduct.score}/100 {alternativeProduct.scoreLabel}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                    <Text style={styles.resultReason}>{alternativeProduct.analysis}</Text>
+                  </View>
+                </View>
+              </Animated.View>
+            )}
+
+            {storyStep === 3 && (
+              <Animated.View entering={FadeInDown.duration(350).springify()}>
+                <Text style={styles.title}>Scan a barcode. Know what is inside.</Text>
+                <Text style={styles.subtitle}>This is the exact kind of result Peel gives you in seconds before the product goes in your cart.</Text>
+
+                <View style={styles.previewCard}>
+                  <View style={styles.previewHeader}>
+                    <Text style={styles.previewEyebrow}>REAL RESULT PREVIEW</Text>
+                    <View style={styles.previewBadge}>
+                      <Text style={styles.previewBadgeText}>Analysis ready</Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.previewRow}>
+                    {previewProduct.imageUrl ? (
+                      <Image source={{ uri: previewProduct.imageUrl }} style={styles.previewImage} />
+                    ) : (
+                      <View style={[styles.previewImage, styles.heroProductPlaceholder]}>
+                        <Text style={styles.heroProductPlaceholderText}>Scan</Text>
+                      </View>
+                    )}
+                    <View style={styles.previewInfo}>
+                      <Text style={styles.previewName} numberOfLines={2}>{previewProduct.productName}</Text>
+                      <Text style={styles.previewBrand}>{previewProduct.brand}</Text>
+                      <LinearGradient colors={getScoreBg(previewProduct.score)} style={styles.previewScoreBadge}>
+                        <Text style={[styles.previewScoreNumber, { color: getScoreColor(previewProduct.score) }]}>{previewProduct.score}</Text>
+                        <Text style={[styles.previewScoreOf, { color: getScoreColor(previewProduct.score) }]}>/100</Text>
+                        <View style={styles.previewScoreDivider} />
+                        <Text style={[styles.previewScoreLabel, { color: getScoreColor(previewProduct.score) }]}>{previewProduct.scoreLabel}</Text>
+                      </LinearGradient>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={styles.valueCard}>
+                  <Text style={styles.valueTitle}>What Peel shows you instantly</Text>
+                  <ValueRow text={previewProduct.hasSeedOils ? 'Seed oils detected immediately' : 'Seed oil check in one tap'} />
+                  <ValueRow text={`${previewProduct.processingLevel} processing profile, clearly labeled`} />
+                  <ValueRow text={previewProduct.allergens.length > 0 ? `${previewProduct.allergens.length} allergen warnings flagged` : 'Allergen warnings when they appear'} />
+                  <ValueRow text="Cleaner alternative decisions before checkout" />
+                </View>
+
+                <View style={styles.analysisCard}>
+                  <View style={styles.analysisHeader}>
+                    <View style={styles.analysisDot} />
+                    <Text style={styles.analysisTitle}>Peel's Analysis</Text>
+                  </View>
+                  <Text style={styles.analysisText}>{previewProduct.analysis}</Text>
+                </View>
+              </Animated.View>
+            )}
           </>
-        ) : (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>Could not load demo product.{'\n'}No worries — you can still continue!</Text>
-          </View>
         )}
       </ScrollView>
 
-      {/* Fixed bottom button */}
       <View style={styles.bottomFixed}>
-        <Pressable
-          testID="start-scanning-button"
-          style={({ pressed }) => [pressed && { opacity: 0.9, transform: [{ scale: 0.98 }] }]}
-          onPress={handleStart}
-        >
-          <LinearGradient
-            colors={['#16A34A', '#15803D']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.buttonGradient}
-          >
-            <Text style={styles.buttonText}>Continue to Trial</Text>
+        <Pressable testID="start-scanning-button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={handleContinue}>
+          <LinearGradient colors={['#16A34A', '#15803D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.buttonGradient}>
+            <Text style={styles.buttonText}>{storyStep === 3 ? 'Continue to Trial' : 'Continue'}</Text>
             <Text style={styles.buttonArrow}>→</Text>
           </LinearGradient>
         </Pressable>
@@ -342,335 +326,92 @@ function ValueRow({ text }: { text: string }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingTop: 64,
-    paddingHorizontal: 24,
-    paddingBottom: 8,
-  },
-  progressTrack: {
-    height: 4,
-    backgroundColor: '#F1F5F9',
-    borderRadius: 2,
-    marginBottom: 16,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: 4,
-    borderRadius: 2,
-  },
-  step: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 1.5,
-    marginBottom: 12,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#0F172A',
-    lineHeight: 40,
-    marginBottom: 6,
-  },
-  subtitle: {
-    fontSize: 15,
-    color: '#64748B',
-    lineHeight: 22,
-  },
-
+  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  header: { paddingTop: 64, paddingHorizontal: 24, paddingBottom: 8 },
+  progressTrack: { height: 4, backgroundColor: '#E2E8F0', borderRadius: 999, overflow: 'hidden', marginBottom: 16 },
+  progressFill: { height: 4, borderRadius: 999 },
+  step: { fontSize: 12, fontWeight: '700', color: '#94A3B8', letterSpacing: 1.5, marginBottom: 10 },
   scrollView: { flex: 1 },
-  scrollContent: {
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 110,
-    gap: 14,
-  },
+  scrollContent: { paddingHorizontal: 24, paddingTop: 8, paddingBottom: 110 },
+  title: { fontSize: 32, fontWeight: '800', color: '#16351F', lineHeight: 39, marginBottom: 10 },
+  subtitle: { fontSize: 16, lineHeight: 23, color: '#64748B', marginBottom: 20 },
 
-  loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 60,
-    gap: 16,
-  },
-  loadingText: {
-    fontSize: 15,
-    color: '#64748B',
-    textAlign: 'center',
-    lineHeight: 22,
-  },
+  loadingContainer: { paddingTop: 120, alignItems: 'center', gap: 16 },
+  loadingText: { fontSize: 15, color: '#64748B', textAlign: 'center' },
 
-  productCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 18,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  productRow: { flexDirection: 'row', gap: 16 },
-  productImage: {
-    width: 85,
-    height: 85,
-    borderRadius: 14,
-    backgroundColor: '#F1F5F9',
-  },
-  productImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
-  resultHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 14,
-  },
-  resultEyebrow: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#94A3B8',
-    letterSpacing: 1.2,
-  },
-  resultStatusBadge: {
-    backgroundColor: '#ECFDF5',
-    borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-  },
-  resultStatusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#15803D',
-  },
-  productInfo: { flex: 1, justifyContent: 'center' },
-  productName: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#0F172A',
-    marginBottom: 3,
-  },
-  productBrand: {
-    fontSize: 13,
-    color: '#94A3B8',
-    marginBottom: 10,
-  },
-  scoreBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    borderRadius: 10,
-    paddingVertical: 5,
-    paddingHorizontal: 12,
-    gap: 3,
-  },
-  scoreNumber: { fontSize: 20, fontWeight: '900' },
-  scoreOf: { fontSize: 13, fontWeight: '600' },
-  scoreDivider: {
-    width: 1,
-    height: 14,
-    backgroundColor: 'rgba(0,0,0,0.1)',
-    marginHorizontal: 6,
-  },
-  scoreLabel: { fontSize: 13, fontWeight: '700' },
+  storyBackdrop: { borderRadius: 28, padding: 22, marginTop: 8 },
+  comparisonRow: { flexDirection: 'row', gap: 14 },
+  comparisonCard: { flex: 1, backgroundColor: 'rgba(255,255,255,0.88)', borderRadius: 22, padding: 16, alignItems: 'center', minHeight: 308 },
+  comparisonBadge: { position: 'absolute', top: -12, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 12 },
+  comparisonBadgeText: { color: '#FFFFFF', fontSize: 14, fontWeight: '800' },
+  comparisonImageWrap: { marginTop: 28, marginBottom: 16, width: 74, height: 74, borderRadius: 20, backgroundColor: '#F8FAFC', alignItems: 'center', justifyContent: 'center' },
+  comparisonEmoji: { fontSize: 44 },
+  comparisonProduct: { fontSize: 14, fontWeight: '700', color: '#334155', textAlign: 'center', marginBottom: 10 },
+  comparisonIngredients: { fontSize: 12, lineHeight: 18, color: '#475569', textAlign: 'center' },
+  comparisonIngredientsHighlight: { color: '#9F1D1D', fontWeight: '700' },
+  comparisonCaption: { textAlign: 'center', marginTop: 18, color: '#41684A', fontSize: 18, fontWeight: '700', fontStyle: 'italic' },
 
-  valueCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  valueTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#0F172A',
-    marginBottom: 14,
-  },
-  valueList: { gap: 12 },
-  valueRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  valueCheck: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#DCFCE7',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  valueCheckText: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#15803D',
-  },
-  valueText: {
-    flex: 1,
-    fontSize: 14,
-    lineHeight: 20,
-    color: '#334155',
-    fontWeight: '600',
-  },
+  feelingPanel: { borderRadius: 28, padding: 24, alignItems: 'center' },
+  heroProductImage: { width: 150, height: 150, resizeMode: 'contain', marginBottom: 22 },
+  heroProductPlaceholder: { backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
+  heroProductPlaceholderText: { fontSize: 20, fontWeight: '700', color: '#94A3B8' },
+  feelingQuestion: { fontSize: 18, fontWeight: '700', color: '#1F2937', textAlign: 'center', lineHeight: 28, marginBottom: 18 },
+  feelingOptions: { width: '100%', gap: 14 },
+  feelingOption: { backgroundColor: '#FFFFFF', borderRadius: 18, paddingVertical: 20, paddingHorizontal: 18, alignItems: 'center', shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },
+  feelingOptionText: { fontSize: 17, fontWeight: '600', color: '#334155' },
 
-  analysisCard: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#DCFCE7',
-  },
-  analysisHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 10,
-  },
-  analysisDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#16A34A',
-  },
-  analysisTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#15803D',
-  },
-  analysisText: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 22,
-  },
+  revealStack: { gap: 16 },
+  resultPanel: { backgroundColor: '#FFFFFF', borderRadius: 24, padding: 18, borderWidth: 1, borderColor: '#E2E8F0', shadowColor: '#0F172A', shadowOpacity: 0.04, shadowRadius: 10, shadowOffset: { width: 0, height: 2 } },
+  altResultPanel: { backgroundColor: '#F8FFF9', borderColor: '#CDEED2' },
+  resultPanelEyebrow: { fontSize: 12, fontWeight: '800', color: '#64748B', letterSpacing: 0.8, marginBottom: 14, textAlign: 'center' },
+  resultProductRow: { flexDirection: 'row', gap: 14, alignItems: 'center' },
+  resultProductImage: { width: 82, height: 82, borderRadius: 18, backgroundColor: '#F1F5F9', resizeMode: 'cover' },
+  altProductIconWrap: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#ECFDF5' },
+  altProductIcon: { fontSize: 36 },
+  resultProductInfo: { flex: 1 },
+  resultProductName: { fontSize: 19, fontWeight: '800', color: '#111827', lineHeight: 24 },
+  resultProductBrand: { fontSize: 14, color: '#64748B', marginTop: 2, marginBottom: 8 },
+  resultScoreRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  scoreDot: { width: 12, height: 12, borderRadius: 6 },
+  resultScoreText: { fontSize: 15, fontWeight: '700' },
+  resultReason: { fontSize: 14, lineHeight: 22, color: '#475569', marginTop: 16 },
+  arrowWrap: { alignItems: 'center', gap: 4 },
+  arrowText: { fontSize: 28, color: '#16A34A', fontWeight: '800' },
+  arrowLabel: { fontSize: 14, fontWeight: '700', color: '#15803D' },
 
-  alertsSection: { gap: 8 },
-  sectionTitle: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#94A3B8',
-    letterSpacing: 1.5,
-    marginBottom: 8,
-  },
-  alertRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: 14,
-    padding: 14,
-    gap: 10,
-    borderLeftWidth: 4,
-  },
-  alertDot: { width: 8, height: 8, borderRadius: 4 },
-  alertText: { fontSize: 14, fontWeight: '600', color: '#374151', flex: 1 },
-  alertBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  alertBadgeText: { color: '#FFF', fontSize: 12, fontWeight: '900' },
+  previewCard: { backgroundColor: '#F8FAFC', borderRadius: 22, padding: 18, borderWidth: 1, borderColor: '#E2E8F0', marginTop: 8 },
+  previewHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
+  previewEyebrow: { fontSize: 12, fontWeight: '800', color: '#94A3B8', letterSpacing: 1.1 },
+  previewBadge: { backgroundColor: '#ECFDF5', borderRadius: 999, paddingHorizontal: 10, paddingVertical: 6 },
+  previewBadgeText: { fontSize: 11, fontWeight: '700', color: '#15803D' },
+  previewRow: { flexDirection: 'row', gap: 14 },
+  previewImage: { width: 84, height: 84, borderRadius: 16, backgroundColor: '#F1F5F9', resizeMode: 'cover' },
+  previewInfo: { flex: 1, justifyContent: 'center' },
+  previewName: { fontSize: 19, fontWeight: '800', color: '#111827', lineHeight: 24 },
+  previewBrand: { fontSize: 14, color: '#64748B', marginBottom: 9, marginTop: 2 },
+  previewScoreBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', gap: 4, borderRadius: 10, paddingVertical: 5, paddingHorizontal: 11 },
+  previewScoreNumber: { fontSize: 21, fontWeight: '900' },
+  previewScoreOf: { fontSize: 13, fontWeight: '700' },
+  previewScoreDivider: { width: 1, height: 14, backgroundColor: 'rgba(0,0,0,0.12)', marginHorizontal: 4 },
+  previewScoreLabel: { fontSize: 13, fontWeight: '700' },
 
-  breakdownCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  breakdownRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 14,
-  },
-  breakdownLeft: { flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 },
-  breakdownLabel: { fontSize: 15, fontWeight: '600', color: '#334155' },
-  statusBadge: { borderRadius: 8, paddingVertical: 3, paddingHorizontal: 10 },
-  statusText: { fontSize: 12, fontWeight: '700' },
-  breakdownRight: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  statusDot: { width: 10, height: 10, borderRadius: 5 },
-  chevron: { fontSize: 16, color: '#94A3B8', fontWeight: '600' },
-  breakdownDivider: { height: 1, backgroundColor: '#E2E8F0' },
+  valueCard: { backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#E2E8F0', marginTop: 14 },
+  valueTitle: { fontSize: 17, fontWeight: '800', color: '#0F172A', marginBottom: 14 },
+  valueRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 12 },
+  valueCheck: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#DCFCE7', alignItems: 'center', justifyContent: 'center' },
+  valueCheckText: { fontSize: 12, fontWeight: '800', color: '#15803D' },
+  valueText: { flex: 1, fontSize: 15, fontWeight: '600', color: '#334155', lineHeight: 21 },
 
-  expandedContent: { paddingBottom: 14, paddingLeft: 4 },
-  expandedLabel: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#94A3B8',
-    marginBottom: 8,
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  expandedInfo: { fontSize: 13, color: '#64748B', lineHeight: 20 },
-  chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  dangerChip: { backgroundColor: '#FEE2E2', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
-  dangerChipText: { fontSize: 12, fontWeight: '600', color: '#DC2626' },
-  warningChip: { backgroundColor: '#FEF3C7', borderRadius: 8, paddingVertical: 6, paddingHorizontal: 12 },
-  warningChipText: { fontSize: 12, fontWeight: '600', color: '#92400E' },
+  analysisCard: { backgroundColor: '#F0FDF4', borderRadius: 18, padding: 18, borderWidth: 1, borderColor: '#DCFCE7', marginTop: 14 },
+  analysisHeader: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  analysisDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#16A34A' },
+  analysisTitle: { fontSize: 16, fontWeight: '700', color: '#15803D' },
+  analysisText: { fontSize: 15, lineHeight: 23, color: '#374151' },
 
-  processingBar: {
-    height: 8,
-    borderRadius: 4,
-    marginBottom: 6,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  processingBarGradient: { height: 8, borderRadius: 4, width: '100%' },
-  processingIndicator: {
-    position: 'absolute',
-    top: -3,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: '#FFF',
-    borderWidth: 3,
-    borderColor: '#334155',
-  },
-  processingLabels: { flexDirection: 'row', justifyContent: 'space-between' },
-  processingLabelText: { fontSize: 11, color: '#94A3B8' },
-
-  ingredientsCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 16,
-    padding: 18,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  ingredientsText: { fontSize: 13, color: '#64748B', lineHeight: 20 },
-
-  bottomFixed: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 24,
-    paddingBottom: 44,
-    paddingTop: 12,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#F1F5F9',
-  },
-  buttonGradient: {
-    flexDirection: 'row',
-    borderRadius: 16,
-    paddingVertical: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
-    shadowRadius: 10,
-    elevation: 6,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 17,
-    fontWeight: '700',
-  },
-  buttonArrow: {
-    color: '#FFFFFF',
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  bottomFixed: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 34, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F1F5F9' },
+  button: { width: '100%', borderRadius: 18, overflow: 'hidden' },
+  buttonPressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
+  buttonGradient: { borderRadius: 18, paddingVertical: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10 },
+  buttonText: { fontSize: 19, fontWeight: '800', color: '#FFFFFF' },
+  buttonArrow: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
 });
