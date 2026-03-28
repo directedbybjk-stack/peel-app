@@ -70,8 +70,8 @@ export default function DemoScreen() {
           />
         </View>
         <Text style={styles.step}>STEP 3 OF 3</Text>
-        <Text style={styles.title}>Here's what Peel{'\n'}can do for you</Text>
-        <Text style={styles.subtitle}>Real product analysis before you start your trial</Text>
+        <Text style={styles.title}>Scan a barcode.{'\n'}Know what is inside.</Text>
+        <Text style={styles.subtitle}>Peel turns a packaged food into a clear ingredient decision in seconds before you buy it.</Text>
       </View>
 
       {/* Scrollable content */}
@@ -90,6 +90,12 @@ export default function DemoScreen() {
           <>
             {/* Product Card */}
             <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.productCard}>
+              <View style={styles.resultHeader}>
+                <Text style={styles.resultEyebrow}>REAL RESULT PREVIEW</Text>
+                <View style={styles.resultStatusBadge}>
+                  <Text style={styles.resultStatusText}>Analysis ready</Text>
+                </View>
+              </View>
               <View style={styles.productRow}>
                 {product.imageUrl ? (
                   <Image source={{ uri: product.imageUrl }} style={styles.productImage} />
@@ -108,6 +114,16 @@ export default function DemoScreen() {
                     <Text style={[styles.scoreLabel, { color: getScoreColor(product.score) }]}>{product.scoreLabel}</Text>
                   </LinearGradient>
                 </View>
+              </View>
+            </Animated.View>
+
+            <Animated.View entering={FadeInDown.delay(70).duration(400).springify()} style={styles.valueCard}>
+              <Text style={styles.valueTitle}>What Peel shows you instantly</Text>
+              <View style={styles.valueList}>
+                <ValueRow text={product.hasSeedOils ? 'Seed oils detected immediately' : 'Seed oil check in one tap'} />
+                <ValueRow text={`${product.processingLevel} processing profile, clearly labeled`} />
+                <ValueRow text={product.allergens.length > 0 ? `${product.allergens.length} allergen warnings flagged` : 'Allergen warnings when they appear'} />
+                <ValueRow text="Cleaner alternative decisions before checkout" />
               </View>
             </Animated.View>
 
@@ -314,6 +330,17 @@ export default function DemoScreen() {
   );
 }
 
+function ValueRow({ text }: { text: string }) {
+  return (
+    <View style={styles.valueRow}>
+      <View style={styles.valueCheck}>
+        <Text style={styles.valueCheckText}>✓</Text>
+      </View>
+      <Text style={styles.valueText}>{text}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -391,6 +418,30 @@ const styles = StyleSheet.create({
     backgroundColor: '#F1F5F9',
   },
   productImagePlaceholder: { alignItems: 'center', justifyContent: 'center' },
+  resultHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 14,
+  },
+  resultEyebrow: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 1.2,
+  },
+  resultStatusBadge: {
+    backgroundColor: '#ECFDF5',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+  },
+  resultStatusText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#15803D',
+  },
   productInfo: { flex: 1, justifyContent: 'center' },
   productName: {
     fontSize: 17,
@@ -421,6 +472,46 @@ const styles = StyleSheet.create({
     marginHorizontal: 6,
   },
   scoreLabel: { fontSize: 13, fontWeight: '700' },
+
+  valueCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  valueTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 14,
+  },
+  valueList: { gap: 12 },
+  valueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  valueCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  valueCheckText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#15803D',
+  },
+  valueText: {
+    flex: 1,
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#334155',
+    fontWeight: '600',
+  },
 
   analysisCard: {
     backgroundColor: '#F0FDF4',

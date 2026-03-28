@@ -98,7 +98,6 @@ export default function PaywallScreen() {
   };
 
   const monthlyPrice = monthlyPackage?.product.priceString || '$14.99';
-  const yearlyPricePerMonth = yearlyPackage?.product.pricePerMonthString || '$5.83';
   const yearlyPrice = yearlyPackage?.product.priceString || '$69.99';
 
   const handleClose = () => {
@@ -167,7 +166,7 @@ export default function PaywallScreen() {
               </View>
               <View>
                 <Text style={[styles.planName, selectedPlan === 'monthly' && styles.planNameSelected]}>Monthly</Text>
-                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>{monthlyPrice}/mo</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>{monthlyPrice}/month</Text>
               </View>
             </View>
           </Pressable>
@@ -191,8 +190,9 @@ export default function PaywallScreen() {
                 {selectedPlan === 'yearly' && <View style={styles.radioInner} />}
               </View>
               <View>
+                <Text style={styles.planBenefit}>Best value after trial</Text>
                 <Text style={[styles.planName, selectedPlan === 'yearly' && styles.planNameSelected]}>Yearly</Text>
-                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>{yearlyPricePerMonth}/mo</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>{yearlyPrice}/year</Text>
               </View>
             </View>
             <LinearGradient colors={['#16A34A', '#15803D']} style={styles.trialBadge}>
@@ -210,25 +210,6 @@ export default function PaywallScreen() {
           </View>
         )}
 
-        {/* Testimonials */}
-        <View style={styles.testimonialsSection}>
-          <TestimonialCard
-            initial="S"
-            bgColor="#DCFCE7"
-            textColor="#16A34A"
-            name="Sarah M."
-            location="Austin, TX"
-            quote="I had no idea how many seed oils were in my everyday groceries. Peel made it so easy to find cleaner alternatives for my family."
-          />
-          <TestimonialCard
-            initial="J"
-            bgColor="#DBEAFE"
-            textColor="#2563EB"
-            name="James R."
-            location="Denver, CO"
-            quote="Worth every penny. I scan everything now before it goes in my cart. The ingredient breakdown is incredibly detailed."
-          />
-        </View>
       </ScrollView>
 
       {/* Fixed bottom CTA */}
@@ -256,7 +237,7 @@ export default function PaywallScreen() {
 
         <Text style={styles.finePrint}>
           {selectedPlan === 'yearly'
-            ? `7 days FREE, then ${yearlyPrice} per year (${yearlyPricePerMonth}/mo). Cancel anytime.`
+            ? `7 days FREE, then ${yearlyPrice} per year. Cancel anytime.`
             : `Billed at ${monthlyPrice}/month. Cancel anytime.`}
         </Text>
 
@@ -285,28 +266,6 @@ function FeatureRow({ text }: { text: string }) {
         <Text style={styles.featureCheckText}>✓</Text>
       </View>
       <Text style={styles.featureText}>{text}</Text>
-    </View>
-  );
-}
-
-function TestimonialCard({
-  initial, bgColor, textColor, name, location, quote,
-}: {
-  initial: string; bgColor: string; textColor: string;
-  name: string; location: string; quote: string;
-}) {
-  return (
-    <View style={styles.testimonialCard}>
-      <View style={styles.testimonialHeader}>
-        <View style={[styles.testimonialAvatar, { backgroundColor: bgColor }]}>
-          <Text style={[styles.testimonialAvatarText, { color: textColor }]}>{initial}</Text>
-        </View>
-        <View>
-          <Text style={styles.testimonialName}>{name}</Text>
-          <Text style={styles.testimonialLocation}>{location}</Text>
-        </View>
-      </View>
-      <Text style={styles.testimonialQuote}>"{quote}"</Text>
     </View>
   );
 }
@@ -516,6 +475,13 @@ const styles = StyleSheet.create({
     color: '#0F172A',
     fontWeight: '700',
   },
+  planBenefit: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#16A34A',
+    letterSpacing: 0.2,
+    marginBottom: 4,
+  },
   planPrice: {
     fontSize: 20,
     fontWeight: '800',
@@ -561,50 +527,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#334155',
-  },
-
-  // Testimonials
-  testimonialsSection: {
-    gap: 10,
-  },
-  testimonialCard: {
-    backgroundColor: '#F8FAFC',
-    borderRadius: 14,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#F1F5F9',
-  },
-  testimonialHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 10,
-  },
-  testimonialAvatar: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  testimonialAvatarText: {
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  testimonialName: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#0F172A',
-  },
-  testimonialLocation: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  testimonialQuote: {
-    fontSize: 14,
-    color: '#475569',
-    lineHeight: 21,
-    fontStyle: 'italic',
   },
 
   // Bottom CTA
