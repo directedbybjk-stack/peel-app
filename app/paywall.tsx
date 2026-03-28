@@ -1,35 +1,123 @@
-import { useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import * as Linking from 'expo-linking';
+import Purchases, { type PurchasesOffering } from 'react-native-purchases';
+
+import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '@/lib/appConfig';
+import { configureRevenueCat, getPackageForPlan, hasPremiumAccess } from '@/lib/revenuecat';
+import { setOnboardingComplete } from '@/lib/storage';
 
 type Plan = 'monthly' | 'yearly';
 
 export default function PaywallScreen() {
   const [selectedPlan, setSelectedPlan] = useState<Plan>('yearly');
+  const [offering, setOffering] = useState<PurchasesOffering | null>(null);
+  const [loadingOfferings, setLoadingOfferings] = useState(true);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleSubscribe = () => {
-    // TODO: RevenueCat integration
-    // For now, just dismiss
-    router.back();
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadOffering() {
+      try {
+        await configureRevenueCat();
+        const offerings = await Purchases.getOfferings();
+        if (mounted) {
+          setOffering(offerings.current);
+        }
+      } catch {
+        if (mounted) {
+          setOffering(null);
+        }
+      } finally {
+        if (mounted) {
+          setLoadingOfferings(false);
+        }
+      }
+    }
+
+    loadOffering();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const monthlyPackage = useMemo(() => getPackageForPlan(offering, 'monthly'), [offering]);
+  const yearlyPackage = useMemo(() => getPackageForPlan(offering, 'yearly'), [offering]);
+  const selectedPackage = selectedPlan === 'yearly' ? yearlyPackage : monthlyPackage;
+
+  const handleSubscribe = async () => {
+    if (!selectedPackage) {
+      Alert.alert('Subscription unavailable', 'The subscription options are still loading. Try again in a moment.');
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const { customerInfo } = await Purchases.purchasePackage(selectedPackage);
+      if (!hasPremiumAccess(customerInfo)) {
+        Alert.alert('Purchase incomplete', 'We could not confirm your subscription yet. Please try restore purchases.');
+        return;
+      }
+
+      await setOnboardingComplete();
+      router.replace('/(tabs)');
+    } catch (error) {
+      const purchaseError = error as { userCancelled?: boolean; message?: string };
+      if (!purchaseError.userCancelled) {
+        Alert.alert('Purchase failed', purchaseError.message || 'We could not complete your purchase. Please try again.');
+      }
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handleRestore = () => {
-    // TODO: RevenueCat restore purchases
+  const handleRestore = async () => {
+    setIsProcessing(true);
+
+    try {
+      const customerInfo = await Purchases.restorePurchases();
+      if (!hasPremiumAccess(customerInfo)) {
+        Alert.alert('No active subscription found', 'We could not find an active Peel subscription to restore.');
+        return;
+      }
+
+      await setOnboardingComplete();
+      router.replace('/(tabs)');
+    } catch (error) {
+      const restoreError = error as { message?: string };
+      Alert.alert('Restore failed', restoreError.message || 'We could not restore your purchases. Please try again.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const monthlyPrice = monthlyPackage?.product.priceString || '$14.99';
+  const yearlyPricePerMonth = yearlyPackage?.product.pricePerMonthString || '$5.83';
+  const yearlyPrice = yearlyPackage?.product.priceString || '$69.99';
+  const handleClose = () => {
+    if (router.canGoBack()) {
+      router.back();
+      return;
+    }
+
+    router.replace('/onboarding');
   };
 
   return (
     <View style={styles.container}>
       <StatusBar style="dark" />
 
-      {/* Close button */}
-      <Pressable style={styles.closeButton} onPress={() => router.back()}>
+      <Pressable style={styles.closeButton} onPress={handleClose}>
         <Text style={styles.closeText}>✕</Text>
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        {/* Header */}
         <View style={styles.header}>
           <LinearGradient colors={['#16A34A', '#15803D']} style={styles.logo}>
             <Text style={styles.logoText}>P</Text>
@@ -37,7 +125,6 @@ export default function PaywallScreen() {
           <Text style={styles.headline}>Start Eating{'\n'}Cleaner Today</Text>
         </View>
 
-        {/* Social Proof */}
         <View style={styles.socialProof}>
           <View style={styles.proofItem}>
             <Text style={styles.proofValue}>4.9</Text>
@@ -52,7 +139,58 @@ export default function PaywallScreen() {
 
         <Text style={styles.trustedText}>Trusted by health-conscious families</Text>
 
-        {/* Testimonials */}
+        <View style={styles.pricingSection}>
+          <Pressable
+            testID="plan-monthly"
+            accessible
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedPlan === 'monthly' }}
+            style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+            onPress={() => setSelectedPlan('monthly')}
+          >
+            <View style={styles.planLeft}>
+              <View style={[styles.radio, selectedPlan === 'monthly' && styles.radioSelected]}>
+                {selectedPlan === 'monthly' && <View style={styles.radioInner} />}
+              </View>
+              <View>
+                <Text style={styles.planName}>Monthly</Text>
+                <Text style={styles.planPrice}>{monthlyPrice}/mo</Text>
+              </View>
+            </View>
+          </Pressable>
+
+          <Pressable
+            testID="plan-yearly"
+            accessible
+            accessibilityRole="button"
+            accessibilityState={{ selected: selectedPlan === 'yearly' }}
+            style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
+            onPress={() => setSelectedPlan('yearly')}
+          >
+            <View style={styles.planLeft}>
+              <View style={[styles.radio, selectedPlan === 'yearly' && styles.radioSelected]}>
+                {selectedPlan === 'yearly' && <View style={styles.radioInner} />}
+              </View>
+              <View>
+                <Text style={styles.planName}>Yearly</Text>
+                <Text style={styles.planPrice}>{yearlyPricePerMonth}/mo</Text>
+              </View>
+            </View>
+            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.trialBadge}>
+              <Text style={styles.trialBadgeText}>7-DAY FREE TRIAL</Text>
+            </LinearGradient>
+          </Pressable>
+        </View>
+
+        {selectedPlan === 'yearly' && (
+          <View style={styles.noPaymentRow}>
+            <View style={styles.checkCircle}>
+              <Text style={styles.checkText}>✓</Text>
+            </View>
+            <Text style={styles.noPaymentText}>No Payment Due Now</Text>
+          </View>
+        )}
+
         <View style={styles.testimonialCard}>
           <View style={styles.testimonialHeader}>
             <View style={styles.testimonialAvatar}>
@@ -83,57 +221,6 @@ export default function PaywallScreen() {
           </Text>
         </View>
 
-        {/* Pricing Options */}
-        <View style={styles.pricingSection}>
-          {/* Monthly */}
-          <Pressable
-            testID="plan-monthly"
-            style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
-            onPress={() => setSelectedPlan('monthly')}
-          >
-            <View style={styles.planLeft}>
-              <View style={[styles.radio, selectedPlan === 'monthly' && styles.radioSelected]}>
-                {selectedPlan === 'monthly' && <View style={styles.radioInner} />}
-              </View>
-              <View>
-                <Text style={styles.planName}>Monthly</Text>
-                <Text style={styles.planPrice}>$14.99/mo</Text>
-              </View>
-            </View>
-          </Pressable>
-
-          {/* Yearly */}
-          <Pressable
-            testID="plan-yearly"
-            style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
-            onPress={() => setSelectedPlan('yearly')}
-          >
-            <View style={styles.planLeft}>
-              <View style={[styles.radio, selectedPlan === 'yearly' && styles.radioSelected]}>
-                {selectedPlan === 'yearly' && <View style={styles.radioInner} />}
-              </View>
-              <View>
-                <Text style={styles.planName}>Yearly</Text>
-                <Text style={styles.planPrice}>$5.83/mo</Text>
-              </View>
-            </View>
-            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.trialBadge}>
-              <Text style={styles.trialBadgeText}>7-DAY FREE TRIAL</Text>
-            </LinearGradient>
-          </Pressable>
-        </View>
-
-        {/* No Payment Due */}
-        {selectedPlan === 'yearly' && (
-          <View style={styles.noPaymentRow}>
-            <View style={styles.checkCircle}>
-              <Text style={styles.checkText}>✓</Text>
-            </View>
-            <Text style={styles.noPaymentText}>No Payment Due Now</Text>
-          </View>
-        )}
-
-        {/* What you get */}
         <View style={styles.featuresCard}>
           <Text style={styles.featuresTitle}>Peel Pro includes:</Text>
           <FeatureRow text="Unlimited product scans" />
@@ -145,9 +232,13 @@ export default function PaywallScreen() {
         </View>
       </ScrollView>
 
-      {/* Fixed Bottom CTA */}
       <View style={styles.bottomFixed}>
-        <Pressable testID="subscribe-button" onPress={handleSubscribe}>
+        <Pressable
+          testID="subscribe-button"
+          disabled={loadingOfferings || isProcessing}
+          style={loadingOfferings || isProcessing ? styles.buttonDisabled : undefined}
+          onPress={handleSubscribe}
+        >
           <LinearGradient
             colors={['#16A34A', '#15803D']}
             start={{ x: 0, y: 0 }}
@@ -155,23 +246,29 @@ export default function PaywallScreen() {
             style={styles.ctaButton}
           >
             <Text style={styles.ctaText}>
-              {selectedPlan === 'yearly' ? 'Try for $0.00' : 'Continue'}
+              {isProcessing ? 'Working...' : selectedPlan === 'yearly' ? 'Try for $0.00' : 'Continue'}
             </Text>
           </LinearGradient>
         </Pressable>
 
         <Text style={styles.finePrint}>
           {selectedPlan === 'yearly'
-            ? '7 days FREE, then $69.99 per year ($5.83/mo)'
-            : 'Billed at $14.99 per month. Cancel anytime.'}
+            ? `7 days FREE, then ${yearlyPrice} per year (${yearlyPricePerMonth}/mo)`
+            : `Billed at ${monthlyPrice}/month. Cancel anytime.`}
         </Text>
 
         <View style={styles.legalRow}>
-          <Pressable><Text style={styles.legalLink}>Terms</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}>
+            <Text style={styles.legalLink}>Terms</Text>
+          </Pressable>
           <Text style={styles.legalDot}>·</Text>
-          <Pressable><Text style={styles.legalLink}>Privacy Policy</Text></Pressable>
+          <Pressable onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
+            <Text style={styles.legalLink}>Privacy Policy</Text>
+          </Pressable>
           <Text style={styles.legalDot}>·</Text>
-          <Pressable onPress={handleRestore}><Text style={styles.legalLink}>Restore</Text></Pressable>
+          <Pressable onPress={handleRestore}>
+            <Text style={styles.legalLink}>Restore</Text>
+          </Pressable>
         </View>
       </View>
     </View>
@@ -278,6 +375,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
     borderTopWidth: 1, borderTopColor: '#F3F4F6',
   },
+  buttonDisabled: { opacity: 0.7 },
   ctaButton: {
     borderRadius: 18, paddingVertical: 20, alignItems: 'center',
     shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,

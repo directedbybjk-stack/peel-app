@@ -5,14 +5,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, router } from 'expo-router';
 import { brand } from '@/constants/Colors';
 import { lookupProduct, searchProducts, type ProductData } from '@/lib/openfoodfacts';
-import { addToScanHistory, addToPantry, removeFromPantry, isInPantry } from '@/lib/storage';
+import { addToScanHistory, addToPantry, removeFromPantry, isInPantry, incrementScanCount } from '@/lib/storage';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
 export default function ProductDetailScreen() {
-  const { barcode, fromScan } = useLocalSearchParams<{ barcode: string; fromScan?: string }>();
+  const { barcode, source } = useLocalSearchParams<{ barcode: string; source?: string }>();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -40,8 +40,8 @@ export default function ProductDetailScreen() {
       clearTimeout(timeout);
       if (p) {
         setProduct(p);
-        // Only add to history if coming from barcode scanner
-        if (fromScan === '1') {
+        if (source === 'scan') {
+          await incrementScanCount();
           await addToScanHistory({
             barcode: p.barcode, productName: p.productName, brand: p.brand,
             score: p.score, imageUrl: p.imageUrl, scannedAt: new Date().toISOString(),
@@ -65,7 +65,7 @@ export default function ProductDetailScreen() {
     });
 
     return () => { cancelled = true; clearTimeout(timeout); };
-  }, [barcode]);
+  }, [barcode, source]);
 
   const toggleSection = (key: string) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);

@@ -5,8 +5,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { brand } from '@/constants/Colors';
 import { lookupProduct, type ProductData } from '@/lib/openfoodfacts';
-import { savePreferences, setOnboardingComplete } from '@/lib/storage';
-import { useOnboarding } from '../_layout';
+import { savePreferences } from '@/lib/storage';
 
 if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
@@ -16,7 +15,6 @@ const DEMO_BARCODES = ['0044000032197', '0028400064057', '0049000006346'];
 
 export default function DemoScreen() {
   const { goals, allergies } = useLocalSearchParams<{ goals: string; allergies: string }>();
-  const { markDone } = useOnboarding();
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -39,9 +37,7 @@ export default function DemoScreen() {
 
   const handleStart = async () => {
     await savePreferences({ goal: goals || '', allergies: (allergies || '').split(',').filter(Boolean) });
-    await setOnboardingComplete();
-    markDone();
-    router.replace('/(tabs)');
+    router.replace('/paywall');
   };
 
   const getScoreColor = (score: number) => {
@@ -69,7 +65,7 @@ export default function DemoScreen() {
         </View>
         <Text style={styles.step}>Step 3 of 3</Text>
         <Text style={styles.title}>Here's what Peel{'\n'}can do for you</Text>
-        <Text style={styles.subtitle}>Real product analysis — no sign-up needed</Text>
+        <Text style={styles.subtitle}>Real product analysis before you start your trial</Text>
       </View>
 
       {/* Scrollable content */}

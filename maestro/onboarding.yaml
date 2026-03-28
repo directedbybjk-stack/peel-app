@@ -1,8 +1,17 @@
-appId: com.anonymous.peel-app
+appId: com.anonymous.peelapp
 ---
 - launchApp:
     clearState: true
+- openLink: "com.anonymous.peelapp://expo-development-client/?url=http%3A%2F%2F192.168.1.75%3A8081"
 - waitForAnimationToEnd
+- runFlow:
+    when:
+      visible: "Open in “Peel”?"
+    commands:
+      - tapOn:
+          text: "Open"
+          optional: true
+      - waitForAnimationToEnd
 - runFlow:
     when:
       visible: "Open in \"Expo Go\"?"
@@ -50,4 +59,6 @@ appId: com.anonymous.peel-app
     id: "start-scanning-button"
 - waitForAnimationToEnd
 - waitForAnimationToEnd
-- takeScreenshot: "07-home-after-onboarding"
+- assertVisible:
+    id: "subscribe-button"
+- takeScreenshot: "07-paywall-after-onboarding"

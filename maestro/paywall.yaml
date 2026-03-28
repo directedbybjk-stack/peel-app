@@ -1,4 +1,4 @@
-appId: com.anonymous.peel-app
+appId: com.anonymous.peelapp
 ---
 - launchApp
 - waitForAnimationToEnd

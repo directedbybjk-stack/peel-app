@@ -1,12 +1,21 @@
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
+import { File, Paths } from 'expo-file-system';
 
+const STORAGE_FILE_NAME = 'peel-storage.json';
 const ONBOARDING_KEY = 'peel_onboarding_complete';
 const PREFERENCES_KEY = 'peel_user_preferences';
 const SCAN_HISTORY_KEY = 'peel_scan_history';
 const PANTRY_KEY = 'peel_pantry';
 const SCAN_COUNT_KEY = 'peel_daily_scan_count';
 const SCAN_DATE_KEY = 'peel_daily_scan_date';
+
+type StorageShape = {
+  [ONBOARDING_KEY]?: string;
+  [PREFERENCES_KEY]?: string;
+  [SCAN_HISTORY_KEY]?: string;
+  [SCAN_COUNT_KEY]?: string;
+  [SCAN_DATE_KEY]?: string;
+};
 
 export interface UserPreferences {
   goal: string;
@@ -24,7 +33,8 @@ export interface ScanHistoryItem {
 
 async function getItem(key: string): Promise<string | null> {
   if (Platform.OS === 'web') return localStorage.getItem(key);
-  return SecureStore.getItemAsync(key);
+  const storage = await readNativeStorage();
+  return storage[key as keyof StorageShape] ?? null;
 }
 
 async function setItem(key: string, value: string): Promise<void> {
@@ -32,7 +42,42 @@ async function setItem(key: string, value: string): Promise<void> {
     localStorage.setItem(key, value);
     return;
   }
-  return SecureStore.setItemAsync(key, value);
+  const storage = await readNativeStorage();
+  storage[key as keyof StorageShape] = value;
+  writeNativeStorage(storage);
+}
+
+async function readNativeStorage(): Promise<StorageShape> {
+  const storageFile = getStorageFile();
+
+  if (!storageFile.exists) {
+    return {};
+  }
+
+  try {
+    const raw = await storageFile.text();
+    if (!raw.trim()) {
+      return {};
+    }
+
+    return JSON.parse(raw) as StorageShape;
+  } catch {
+    return {};
+  }
+}
+
+function writeNativeStorage(storage: StorageShape): void {
+  const storageFile = getStorageFile();
+
+  if (!storageFile.exists) {
+    storageFile.create({ intermediates: true, overwrite: true });
+  }
+
+  storageFile.write(JSON.stringify(storage), { encoding: 'utf8' });
+}
+
+function getStorageFile(): File {
+  return new File(Paths.document, STORAGE_FILE_NAME);
 }
 
 export async function isOnboardingComplete(): Promise<boolean> {

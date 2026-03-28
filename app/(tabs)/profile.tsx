@@ -5,9 +5,10 @@ import {
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
 import { brand } from '@/constants/Colors';
+import { CONTACT_URL, PRIVACY_POLICY_URL, SUPPORT_URL, TERMS_OF_SERVICE_URL } from '@/lib/appConfig';
 import { getPreferences, savePreferences, getScanHistory, type UserPreferences } from '@/lib/storage';
 
 const GOAL_OPTIONS: { id: string; label: string; icon: string }[] = [
@@ -111,7 +112,7 @@ export default function ProfileScreen() {
           </View>
           <Text style={styles.name}>Peel User</Text>
           <View style={styles.planBadge}>
-            <Text style={styles.planBadgeText}>Free Plan</Text>
+            <Text style={styles.planBadgeText}>Peel Pro</Text>
           </View>
         </View>
 
@@ -132,29 +133,6 @@ export default function ProfileScreen() {
             <Text style={styles.statLabel}>Allergies</Text>
           </View>
         </View>
-
-        {/* Upgrade CTA */}
-        <Pressable
-          testID="upgrade-button"
-          style={({ pressed }) => [pressed && { transform: [{ scale: 0.98 }] }]}
-          onPress={() => router.push('/paywall')}
-        >
-          <LinearGradient
-            colors={['#16A34A', '#15803D']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.upgradeCTA}
-          >
-            <View>
-              <Text style={styles.upgradeTitle}>Upgrade to Peel Pro</Text>
-              <Text style={styles.upgradeSubtitle}>Unlimited scans, no daily limits</Text>
-            </View>
-            <View style={styles.upgradePriceWrap}>
-              <Text style={styles.upgradePrice}>$5.83</Text>
-              <Text style={styles.upgradePricePer}>/mo</Text>
-            </View>
-          </LinearGradient>
-        </Pressable>
 
         {/* Preferences Section */}
         <Text style={styles.sectionHeader}>Preferences</Text>
@@ -251,7 +229,7 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]} onPress={() => Linking.openURL(PRIVACY_POLICY_URL)}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
                 <Ionicons name="shield-checkmark-outline" size={18} color={brand.primary} />
@@ -263,7 +241,7 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]} onPress={() => Linking.openURL(TERMS_OF_SERVICE_URL)}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconWrap, { backgroundColor: '#F3F4F6' }]}>
                 <Ionicons name="document-text-outline" size={18} color="#6B7280" />
@@ -275,12 +253,24 @@ export default function ProfileScreen() {
 
           <View style={styles.menuDivider} />
 
-          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]}>
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]} onPress={() => Linking.openURL(SUPPORT_URL)}>
             <View style={styles.menuRowLeft}>
               <View style={[styles.menuIconWrap, { backgroundColor: '#EFF6FF' }]}>
                 <Ionicons name="chatbubble-ellipses-outline" size={18} color="#3B82F6" />
               </View>
               <Text style={styles.menuRowText}>Contact Support</Text>
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
+          </Pressable>
+
+          <View style={styles.menuDivider} />
+
+          <Pressable style={({ pressed }) => [styles.menuRow, pressed && styles.menuRowPressed]} onPress={() => Linking.openURL(CONTACT_URL)}>
+            <View style={styles.menuRowLeft}>
+              <View style={[styles.menuIconWrap, { backgroundColor: '#FEF2F2' }]}>
+                <Ionicons name="mail-outline" size={18} color="#EF4444" />
+              </View>
+              <Text style={styles.menuRowText}>Contact Peel</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color="#D1D5DB" />
           </Pressable>
@@ -487,18 +477,6 @@ const styles = StyleSheet.create({
   statValue: { fontSize: 24, fontWeight: '800', color: '#111827' },
   statLabel: { fontSize: 12, color: '#9CA3AF', marginTop: 3 },
   statDivider: { width: 1, backgroundColor: '#F3F4F6' },
-
-  // Upgrade CTA
-  upgradeCTA: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    borderRadius: 18, padding: 20, marginBottom: 28,
-    shadowColor: '#16A34A', shadowOpacity: 0.25, shadowRadius: 12, shadowOffset: { width: 0, height: 4 },
-  },
-  upgradeTitle: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
-  upgradeSubtitle: { fontSize: 13, color: 'rgba(255,255,255,0.7)', marginTop: 2 },
-  upgradePriceWrap: { flexDirection: 'row', alignItems: 'baseline' },
-  upgradePrice: { fontSize: 20, fontWeight: '800', color: '#FFFFFF' },
-  upgradePricePer: { fontSize: 13, fontWeight: '600', color: 'rgba(255,255,255,0.7)' },
 
   // Sections
   sectionHeader: {

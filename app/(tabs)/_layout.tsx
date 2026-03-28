@@ -104,8 +104,6 @@ export default function TabLayout() {
           ),
         }}
       />
-      {/* Hide the old two.tsx tab */}
-      <Tabs.Screen name="two" options={{ href: null }} />
     </Tabs>
   );
 }

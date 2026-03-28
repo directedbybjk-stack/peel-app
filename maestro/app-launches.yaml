@@ -1,6 +1,16 @@
-appId: com.anonymous.peel-app
+appId: com.anonymous.peelapp
 ---
 - launchApp
 - waitForAnimationToEnd
-- assertVisible: "Tab One"
-- takeScreenshot: "app-launched-tab-one"
+- assertVisible: "Peel"
+- runFlow:
+    when:
+      visible:
+        id: "get-started-button"
+    commands:
+      - takeScreenshot: "app-launched-onboarding"
+- runFlow:
+    when:
+      visible: "Scan a Product"
+    commands:
+      - takeScreenshot: "app-launched-home"

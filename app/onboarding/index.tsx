@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Dimensions, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
@@ -17,7 +17,6 @@ import Animated, {
 
 const { width } = Dimensions.get('window');
 
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export default function WelcomeScreen() {
@@ -134,7 +133,7 @@ export default function WelcomeScreen() {
     opacity: subtitleOpacity.value,
   }));
 
-  const makeCardStyle = (val: Animated.SharedValue<number>) =>
+  const makeCardStyle = (val: ReturnType<typeof useSharedValue<number>>) =>
     useAnimatedStyle(() => ({
       opacity: val.value,
       transform: [
@@ -163,17 +162,13 @@ export default function WelcomeScreen() {
       <View style={styles.content}>
         {/* Animated Logo with Glow */}
         <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          {/* Glow ring */}
           <Animated.View style={[styles.logoGlow, logoGlowStyle]} />
           <View style={styles.logoOuter}>
-            <LinearGradient
-              colors={['#22C55E', '#16A34A', '#15803D']}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 1 }}
-              style={styles.logoGradient}
-            >
-              <Text style={styles.logoLetter}>P</Text>
-            </LinearGradient>
+            <Image
+              source={require('../../assets/images/icon.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
         </Animated.View>
 
@@ -239,11 +234,6 @@ export default function WelcomeScreen() {
           </LinearGradient>
         </AnimatedPressable>
 
-        <Pressable testID="sign-in-link" onPress={() => router.replace('/(tabs)')}>
-          <Text style={styles.signInText}>
-            Already have an account? <Text style={styles.signInLink}>Sign in</Text>
-          </Text>
-        </Pressable>
       </Animated.View>
     </LinearGradient>
   );
@@ -275,26 +265,21 @@ const styles = StyleSheet.create({
     backgroundColor: '#22C55E',
   },
   logoOuter: {
+    width: 112,
+    height: 112,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255,255,255,0.82)',
+    alignItems: 'center',
+    justifyContent: 'center',
     shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.16,
     shadowRadius: 24,
     elevation: 16,
   },
-  logoGradient: {
+  logoImage: {
     width: 96,
     height: 96,
-    borderRadius: 30,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoLetter: {
-    fontSize: 48,
-    fontWeight: '900',
-    color: '#FFFFFF',
-    textShadowColor: 'rgba(0,0,0,0.15)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 4,
   },
   appName: {
     fontSize: 56,

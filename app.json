@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "peel-app",
+    "name": "Peel",
     "slug": "peel-app",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -10,11 +10,11 @@
     "splash": {
       "image": "./assets/images/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ECFDF5"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.peel-app"
+      "supportsTablet": false,
+      "bundleIdentifier": "com.anonymous.peelapp"
     },
     "android": {
       "adaptiveIcon": {
