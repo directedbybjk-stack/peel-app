@@ -16,16 +16,18 @@ type StoryStep = 0 | 1 | 2 | 3;
 const COMPARISON_ITEMS = [
   {
     title: 'Then',
-    product: 'Original crackers',
+    product: 'Original cookies',
     badgeColor: '#3F6F49',
     ingredients: 'Flour, butter, sugar, salt, baking soda',
+    emoji: '🍪',
   },
   {
     title: 'Now',
-    product: 'Modern crackers',
+    product: 'Modern cookies',
     badgeColor: '#A92B2B',
     ingredients: 'Soybean oil, canola oil, high fructose corn syrup, soy lecithin, natural flavor',
     highlight: true,
+    emoji: '🍪',
   },
 ];
 
@@ -84,11 +86,11 @@ export default function DemoScreen() {
   }, [product]);
 
   const alternativeProduct = {
-    productName: 'Kettle Cooked Potato Chips',
-    brand: 'Siete',
-    score: 87,
+    productName: 'Simple Butter Cookies',
+    brand: 'Better pantry swap',
+    score: 84,
     scoreLabel: 'Excellent',
-    analysis: 'Made with avocado oil and simpler ingredients, making it a cleaner alternative to conventional chips.',
+    analysis: 'Made with fewer processed ingredients and no seed oils, making it a cleaner cookie-style swap for everyday snacking.',
   };
 
   const getScoreColor = (score: number) => {
@@ -149,7 +151,7 @@ export default function DemoScreen() {
                           <Text style={styles.comparisonBadgeText}>{item.title}</Text>
                         </View>
                         <View style={styles.comparisonImageWrap}>
-                          <Text style={styles.comparisonEmoji}>{item.title === 'Then' ? '🥫' : '📦'}</Text>
+                          <Text style={styles.comparisonEmoji}>{item.emoji}</Text>
                         </View>
                         <Text style={styles.comparisonProduct}>{item.product}</Text>
                         <Text style={[styles.comparisonIngredients, item.highlight && styles.comparisonIngredientsHighlight]}>
@@ -173,10 +175,10 @@ export default function DemoScreen() {
                     <Image source={{ uri: previewProduct.imageUrl }} style={styles.heroProductImage} />
                   ) : (
                     <View style={[styles.heroProductImage, styles.heroProductPlaceholder]}>
-                      <Text style={styles.heroProductPlaceholderText}>Chips</Text>
+                      <Text style={styles.heroProductPlaceholderEmoji}>🍪</Text>
                     </View>
                   )}
-                  <Text style={styles.feelingQuestion}>How do these chips make you feel after eating them?</Text>
+                  <Text style={styles.feelingQuestion}>How do these cookies make you feel after eating them?</Text>
 
                   <View style={styles.feelingOptions}>
                     {FEELING_OPTIONS.map((option) => (
@@ -202,7 +204,7 @@ export default function DemoScreen() {
                         <Image source={{ uri: previewProduct.imageUrl }} style={styles.resultProductImage} />
                       ) : (
                         <View style={[styles.resultProductImage, styles.heroProductPlaceholder]}>
-                          <Text style={styles.heroProductPlaceholderText}>Bad</Text>
+                          <Text style={styles.heroProductPlaceholderEmoji}>🍪</Text>
                         </View>
                       )}
                       <View style={styles.resultProductInfo}>
@@ -228,7 +230,7 @@ export default function DemoScreen() {
                     <Text style={styles.resultPanelEyebrow}>TRY THIS INSTEAD</Text>
                     <View style={styles.resultProductRow}>
                       <View style={[styles.resultProductImage, styles.altProductIconWrap]}>
-                        <Text style={styles.altProductIcon}>🌮</Text>
+                        <Text style={styles.altProductIcon}>🍪</Text>
                       </View>
                       <View style={styles.resultProductInfo}>
                         <Text style={styles.resultProductName}>{alternativeProduct.productName}</Text>
@@ -265,7 +267,7 @@ export default function DemoScreen() {
                       <Image source={{ uri: previewProduct.imageUrl }} style={styles.previewImage} />
                     ) : (
                       <View style={[styles.previewImage, styles.heroProductPlaceholder]}>
-                        <Text style={styles.heroProductPlaceholderText}>Scan</Text>
+                        <Text style={styles.heroProductPlaceholderEmoji}>🍪</Text>
                       </View>
                     )}
                     <View style={styles.previewInfo}>
@@ -355,6 +357,7 @@ const styles = StyleSheet.create({
   heroProductImage: { width: 150, height: 150, resizeMode: 'contain', marginBottom: 22 },
   heroProductPlaceholder: { backgroundColor: '#F1F5F9', alignItems: 'center', justifyContent: 'center' },
   heroProductPlaceholderText: { fontSize: 20, fontWeight: '700', color: '#94A3B8' },
+  heroProductPlaceholderEmoji: { fontSize: 42 },
   feelingQuestion: { fontSize: 18, fontWeight: '700', color: '#1F2937', textAlign: 'center', lineHeight: 28, marginBottom: 18 },
   feelingOptions: { width: '100%', gap: 14 },
   feelingOption: { backgroundColor: '#FFFFFF', borderRadius: 18, paddingVertical: 20, paddingHorizontal: 18, alignItems: 'center', shadowColor: '#0F172A', shadowOpacity: 0.05, shadowRadius: 8, shadowOffset: { width: 0, height: 2 } },

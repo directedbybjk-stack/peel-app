@@ -50,15 +50,30 @@ appId: com.anonymous.peelapp
     id: "allergies-continue-button"
 - waitForAnimationToEnd
 - waitForAnimationToEnd
-- takeScreenshot: "06-demo"
 - extendedWaitUntil:
     visible:
       id: "start-scanning-button"
     timeout: 15000
+- takeScreenshot: "06-demo-story-1"
+- tapOn:
+    id: "start-scanning-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "07-demo-story-2"
+- tapOn:
+    id: "start-scanning-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "08-demo-story-3"
+- tapOn:
+    id: "start-scanning-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
+- takeScreenshot: "09-demo-story-4"
 - tapOn:
     id: "start-scanning-button"
 - waitForAnimationToEnd
 - waitForAnimationToEnd
 - assertVisible:
     id: "subscribe-button"
-- takeScreenshot: "07-paywall-after-onboarding"
+- takeScreenshot: "10-paywall-after-onboarding"
