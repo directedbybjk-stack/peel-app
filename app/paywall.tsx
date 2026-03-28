@@ -100,12 +100,12 @@ export default function PaywallScreen() {
   const monthlyPrice = monthlyPackage?.product.priceString || '$14.99';
   const yearlyPricePerMonth = yearlyPackage?.product.pricePerMonthString || '$5.83';
   const yearlyPrice = yearlyPackage?.product.priceString || '$69.99';
+
   const handleClose = () => {
     if (router.canGoBack()) {
       router.back();
       return;
     }
-
     router.replace('/onboarding');
   };
 
@@ -118,28 +118,41 @@ export default function PaywallScreen() {
       </Pressable>
 
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        {/* Header */}
         <View style={styles.header}>
-          <LinearGradient colors={['#16A34A', '#15803D']} style={styles.logo}>
+          <LinearGradient colors={['#22C55E', '#16A34A']} style={styles.logo}>
             <Text style={styles.logoText}>P</Text>
           </LinearGradient>
           <Text style={styles.headline}>Start Eating{'\n'}Cleaner Today</Text>
+
+          <View style={styles.socialProof}>
+            <View style={styles.proofItem}>
+              <Text style={styles.proofValue}>4.9</Text>
+              <Text style={styles.proofLabel}>Stars</Text>
+            </View>
+            <View style={styles.proofDivider} />
+            <View style={styles.proofItem}>
+              <Text style={styles.proofValue}>3M+</Text>
+              <Text style={styles.proofLabel}>Products</Text>
+            </View>
+          </View>
+          <Text style={styles.trustedText}>Trusted by health-conscious families</Text>
         </View>
 
-        <View style={styles.socialProof}>
-          <View style={styles.proofItem}>
-            <Text style={styles.proofValue}>4.9</Text>
-            <Text style={styles.proofLabel}>Stars</Text>
-          </View>
-          <View style={styles.proofDivider} />
-          <View style={styles.proofItem}>
-            <Text style={styles.proofValue}>3M+</Text>
-            <Text style={styles.proofLabel}>Products</Text>
-          </View>
+        {/* Benefits — above pricing */}
+        <View style={styles.benefitsCard}>
+          <Text style={styles.benefitsTitle}>What you get with Peel Pro</Text>
+          <FeatureRow text="Unlimited product scans" />
+          <FeatureRow text="Detailed ingredient breakdown" />
+          <FeatureRow text="Seed oil & additive detection" />
+          <FeatureRow text="Personalized health alerts" />
+          <FeatureRow text="Healthier alternative suggestions" />
+          <FeatureRow text="Full scan history" />
         </View>
 
-        <Text style={styles.trustedText}>Trusted by health-conscious families</Text>
-
+        {/* Pricing plans */}
         <View style={styles.pricingSection}>
+          {/* Monthly */}
           <Pressable
             testID="plan-monthly"
             accessible
@@ -153,12 +166,13 @@ export default function PaywallScreen() {
                 {selectedPlan === 'monthly' && <View style={styles.radioInner} />}
               </View>
               <View>
-                <Text style={styles.planName}>Monthly</Text>
-                <Text style={styles.planPrice}>{monthlyPrice}/mo</Text>
+                <Text style={[styles.planName, selectedPlan === 'monthly' && styles.planNameSelected]}>Monthly</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>{monthlyPrice}/mo</Text>
               </View>
             </View>
           </Pressable>
 
+          {/* Yearly */}
           <Pressable
             testID="plan-yearly"
             accessible
@@ -167,13 +181,18 @@ export default function PaywallScreen() {
             style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
             onPress={() => setSelectedPlan('yearly')}
           >
+            {selectedPlan === 'yearly' && (
+              <View style={styles.bestValueLabel}>
+                <Text style={styles.bestValueText}>BEST VALUE</Text>
+              </View>
+            )}
             <View style={styles.planLeft}>
               <View style={[styles.radio, selectedPlan === 'yearly' && styles.radioSelected]}>
                 {selectedPlan === 'yearly' && <View style={styles.radioInner} />}
               </View>
               <View>
-                <Text style={styles.planName}>Yearly</Text>
-                <Text style={styles.planPrice}>{yearlyPricePerMonth}/mo</Text>
+                <Text style={[styles.planName, selectedPlan === 'yearly' && styles.planNameSelected]}>Yearly</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>{yearlyPricePerMonth}/mo</Text>
               </View>
             </View>
             <LinearGradient colors={['#16A34A', '#15803D']} style={styles.trialBadge}>
@@ -185,58 +204,42 @@ export default function PaywallScreen() {
         {selectedPlan === 'yearly' && (
           <View style={styles.noPaymentRow}>
             <View style={styles.checkCircle}>
-              <Text style={styles.checkText}>✓</Text>
+              <Text style={styles.checkMark}>✓</Text>
             </View>
             <Text style={styles.noPaymentText}>No Payment Due Now</Text>
           </View>
         )}
 
-        <View style={styles.testimonialCard}>
-          <View style={styles.testimonialHeader}>
-            <View style={styles.testimonialAvatar}>
-              <Text style={styles.testimonialAvatarText}>S</Text>
-            </View>
-            <View>
-              <Text style={styles.testimonialName}>Sarah M.</Text>
-              <Text style={styles.testimonialLocation}>Austin, TX</Text>
-            </View>
-          </View>
-          <Text style={styles.testimonialText}>
-            "I had no idea how many seed oils were in my everyday groceries. Peel made it so easy to find cleaner alternatives for my family."
-          </Text>
-        </View>
-
-        <View style={styles.testimonialCard}>
-          <View style={styles.testimonialHeader}>
-            <View style={[styles.testimonialAvatar, { backgroundColor: '#DBEAFE' }]}>
-              <Text style={[styles.testimonialAvatarText, { color: '#2563EB' }]}>J</Text>
-            </View>
-            <View>
-              <Text style={styles.testimonialName}>James R.</Text>
-              <Text style={styles.testimonialLocation}>Denver, CO</Text>
-            </View>
-          </View>
-          <Text style={styles.testimonialText}>
-            "Worth every penny. I scan everything now before it goes in my cart. The ingredient breakdown is incredibly detailed."
-          </Text>
-        </View>
-
-        <View style={styles.featuresCard}>
-          <Text style={styles.featuresTitle}>Peel Pro includes:</Text>
-          <FeatureRow text="Unlimited product scans" />
-          <FeatureRow text="Detailed ingredient breakdown" />
-          <FeatureRow text="Seed oil & additive detection" />
-          <FeatureRow text="Personalized health alerts" />
-          <FeatureRow text="Healthier alternative suggestions" />
-          <FeatureRow text="Full scan history" />
+        {/* Testimonials */}
+        <View style={styles.testimonialsSection}>
+          <TestimonialCard
+            initial="S"
+            bgColor="#DCFCE7"
+            textColor="#16A34A"
+            name="Sarah M."
+            location="Austin, TX"
+            quote="I had no idea how many seed oils were in my everyday groceries. Peel made it so easy to find cleaner alternatives for my family."
+          />
+          <TestimonialCard
+            initial="J"
+            bgColor="#DBEAFE"
+            textColor="#2563EB"
+            name="James R."
+            location="Denver, CO"
+            quote="Worth every penny. I scan everything now before it goes in my cart. The ingredient breakdown is incredibly detailed."
+          />
         </View>
       </ScrollView>
 
+      {/* Fixed bottom CTA */}
       <View style={styles.bottomFixed}>
         <Pressable
           testID="subscribe-button"
           disabled={loadingOfferings || isProcessing}
-          style={loadingOfferings || isProcessing ? styles.buttonDisabled : undefined}
+          style={[
+            { width: '100%' },
+            (loadingOfferings || isProcessing) && styles.buttonDisabled,
+          ]}
           onPress={handleSubscribe}
         >
           <LinearGradient
@@ -246,14 +249,14 @@ export default function PaywallScreen() {
             style={styles.ctaButton}
           >
             <Text style={styles.ctaText}>
-              {isProcessing ? 'Working...' : selectedPlan === 'yearly' ? 'Try for $0.00' : 'Continue'}
+              {isProcessing ? 'Working...' : selectedPlan === 'yearly' ? 'Try for $0.00' : `Subscribe for ${monthlyPrice}/mo`}
             </Text>
           </LinearGradient>
         </Pressable>
 
         <Text style={styles.finePrint}>
           {selectedPlan === 'yearly'
-            ? `7 days FREE, then ${yearlyPrice} per year (${yearlyPricePerMonth}/mo)`
+            ? `7 days FREE, then ${yearlyPrice} per year (${yearlyPricePerMonth}/mo). Cancel anytime.`
             : `Billed at ${monthlyPrice}/month. Cancel anytime.`}
         </Text>
 
@@ -286,103 +289,376 @@ function FeatureRow({ text }: { text: string }) {
   );
 }
 
+function TestimonialCard({
+  initial, bgColor, textColor, name, location, quote,
+}: {
+  initial: string; bgColor: string; textColor: string;
+  name: string; location: string; quote: string;
+}) {
+  return (
+    <View style={styles.testimonialCard}>
+      <View style={styles.testimonialHeader}>
+        <View style={[styles.testimonialAvatar, { backgroundColor: bgColor }]}>
+          <Text style={[styles.testimonialAvatarText, { color: textColor }]}>{initial}</Text>
+        </View>
+        <View>
+          <Text style={styles.testimonialName}>{name}</Text>
+          <Text style={styles.testimonialLocation}>{location}</Text>
+        </View>
+      </View>
+      <Text style={styles.testimonialQuote}>"{quote}"</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#FFFFFF' },
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
   closeButton: {
-    position: 'absolute', top: 56, right: 20, zIndex: 10,
-    width: 36, height: 36, borderRadius: 18, backgroundColor: '#F3F4F6',
-    alignItems: 'center', justifyContent: 'center',
+    position: 'absolute',
+    top: 56,
+    right: 20,
+    zIndex: 10,
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  closeText: { fontSize: 16, color: '#6B7280', fontWeight: '600' },
+  closeText: {
+    fontSize: 15,
+    color: '#64748B',
+    fontWeight: '600',
+  },
 
-  scrollContent: { paddingTop: 70, paddingHorizontal: 24, paddingBottom: 200 },
+  scrollContent: {
+    paddingTop: 72,
+    paddingHorizontal: 24,
+    paddingBottom: 210,
+  },
 
-  header: { alignItems: 'center', marginBottom: 24 },
-  logo: { width: 72, height: 72, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  logoText: { fontSize: 36, fontWeight: '900', color: '#FFF' },
-  headline: { fontSize: 32, fontWeight: '900', color: '#111827', textAlign: 'center', lineHeight: 40 },
-
+  // Header
+  header: {
+    alignItems: 'center',
+    marginBottom: 28,
+  },
+  logo: {
+    width: 64,
+    height: 64,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  logoText: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#FFF',
+  },
+  headline: {
+    fontSize: 30,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+    lineHeight: 38,
+    marginBottom: 20,
+  },
   socialProof: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#F9FAFB', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 32, marginBottom: 8,
-    alignSelf: 'center', gap: 24,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    paddingVertical: 14,
+    paddingHorizontal: 28,
+    gap: 24,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  proofItem: { alignItems: 'center' },
-  proofValue: { fontSize: 24, fontWeight: '900', color: '#111827' },
-  proofLabel: { fontSize: 12, fontWeight: '600', color: '#6B7280', marginTop: 2 },
-  proofDivider: { width: 1, height: 32, backgroundColor: '#E5E7EB' },
-  trustedText: { fontSize: 14, color: '#9CA3AF', textAlign: 'center', marginBottom: 20 },
+  proofItem: {
+    alignItems: 'center',
+  },
+  proofValue: {
+    fontSize: 22,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  proofLabel: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  proofDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#E2E8F0',
+  },
+  trustedText: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: 12,
+  },
 
-  testimonialCard: {
-    backgroundColor: '#F9FAFB', borderRadius: 18, padding: 18, marginBottom: 12,
-    borderWidth: 1, borderColor: '#F3F4F6',
+  // Benefits
+  benefitsCard: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 24,
+    borderWidth: 1,
+    borderColor: '#DCFCE7',
   },
-  testimonialHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 10 },
-  testimonialAvatar: {
-    width: 40, height: 40, borderRadius: 20, backgroundColor: '#DCFCE7',
-    alignItems: 'center', justifyContent: 'center',
+  benefitsTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#15803D',
+    marginBottom: 16,
   },
-  testimonialAvatarText: { fontSize: 18, fontWeight: '800', color: '#16A34A' },
-  testimonialName: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  testimonialLocation: { fontSize: 12, color: '#9CA3AF' },
-  testimonialText: { fontSize: 14, color: '#4B5563', lineHeight: 22, fontStyle: 'italic' },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 12,
+  },
+  featureCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#16A34A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  featureCheckText: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  featureText: {
+    fontSize: 15,
+    color: '#334155',
+    fontWeight: '500',
+  },
 
-  pricingSection: { gap: 12, marginTop: 8, marginBottom: 12 },
+  // Pricing
+  pricingSection: {
+    gap: 10,
+    marginBottom: 14,
+  },
   planCard: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', borderRadius: 18, padding: 18,
-    borderWidth: 2.5, borderColor: '#E5E7EB',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    padding: 18,
+    borderWidth: 1.5,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
   },
   planCardSelected: {
-    borderColor: '#16A34A', backgroundColor: '#F0FDF4',
-    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10, elevation: 4,
+    borderColor: '#16A34A',
+    backgroundColor: '#F0FDF4',
+    borderWidth: 2,
   },
-  planLeft: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+  bestValueLabel: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    backgroundColor: '#16A34A',
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderBottomRightRadius: 8,
+  },
+  bestValueText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#FFF',
+    letterSpacing: 1,
+  },
+  planLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
   radio: {
-    width: 28, height: 28, borderRadius: 14, borderWidth: 2.5, borderColor: '#D1D5DB',
-    alignItems: 'center', justifyContent: 'center',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#CBD5E1',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  radioSelected: { borderColor: '#16A34A' },
-  radioInner: { width: 16, height: 16, borderRadius: 8, backgroundColor: '#16A34A' },
-  planName: { fontSize: 16, fontWeight: '700', color: '#111827' },
-  planPrice: { fontSize: 20, fontWeight: '900', color: '#111827', marginTop: 2 },
-  trialBadge: { borderRadius: 10, paddingVertical: 6, paddingHorizontal: 14 },
-  trialBadgeText: { fontSize: 11, fontWeight: '800', color: '#FFF', letterSpacing: 0.5 },
+  radioSelected: {
+    borderColor: '#16A34A',
+  },
+  radioInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    backgroundColor: '#16A34A',
+  },
+  planName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  planNameSelected: {
+    color: '#0F172A',
+    fontWeight: '700',
+  },
+  planPrice: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#94A3B8',
+    marginTop: 1,
+  },
+  planPriceSelected: {
+    color: '#0F172A',
+  },
+  trialBadge: {
+    borderRadius: 8,
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+  },
+  trialBadgeText: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#FFF',
+    letterSpacing: 0.5,
+  },
 
-  noPaymentRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 16 },
+  noPaymentRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
   checkCircle: {
-    width: 22, height: 22, borderRadius: 11, backgroundColor: '#16A34A',
-    alignItems: 'center', justifyContent: 'center',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: '#16A34A',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  checkText: { color: '#FFF', fontSize: 12, fontWeight: '800' },
-  noPaymentText: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  checkMark: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  noPaymentText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#334155',
+  },
 
-  featuresCard: {
-    backgroundColor: '#F0FDF4', borderRadius: 18, padding: 20, borderWidth: 1, borderColor: '#DCFCE7',
+  // Testimonials
+  testimonialsSection: {
+    gap: 10,
   },
-  featuresTitle: { fontSize: 16, fontWeight: '800', color: '#15803D', marginBottom: 14 },
-  featureRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 12 },
-  featureCheck: {
-    width: 24, height: 24, borderRadius: 12, backgroundColor: '#16A34A',
-    alignItems: 'center', justifyContent: 'center',
+  testimonialCard: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 14,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
   },
-  featureCheckText: { color: '#FFF', fontSize: 13, fontWeight: '800' },
-  featureText: { fontSize: 15, color: '#374151', fontWeight: '500' },
+  testimonialHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 10,
+  },
+  testimonialAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testimonialAvatarText: {
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  testimonialName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  testimonialLocation: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  testimonialQuote: {
+    fontSize: 14,
+    color: '#475569',
+    lineHeight: 21,
+    fontStyle: 'italic',
+  },
 
+  // Bottom CTA
   bottomFixed: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: 24, paddingBottom: 36, paddingTop: 12,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 24,
+    paddingBottom: 34,
+    paddingTop: 14,
     backgroundColor: '#FFFFFF',
-    borderTopWidth: 1, borderTopColor: '#F3F4F6',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
-  buttonDisabled: { opacity: 0.7 },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
   ctaButton: {
-    borderRadius: 18, paddingVertical: 20, alignItems: 'center',
-    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
+    borderRadius: 16,
+    paddingVertical: 18,
+    alignItems: 'center',
+    shadowColor: '#16A34A',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 6,
   },
-  ctaText: { color: '#FFFFFF', fontSize: 19, fontWeight: '800', letterSpacing: 0.3 },
-  finePrint: { fontSize: 12, color: '#9CA3AF', textAlign: 'center', marginTop: 10 },
-  legalRow: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8, marginTop: 8 },
-  legalLink: { fontSize: 12, color: '#9CA3AF', textDecorationLine: 'underline' },
-  legalDot: { fontSize: 12, color: '#D1D5DB' },
+  ctaText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  finePrint: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textAlign: 'center',
+    marginTop: 10,
+    lineHeight: 17,
+  },
+  legalRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 8,
+  },
+  legalLink: {
+    fontSize: 12,
+    color: '#94A3B8',
+    textDecorationLine: 'underline',
+  },
+  legalDot: {
+    fontSize: 12,
+    color: '#CBD5E1',
+  },
 });
