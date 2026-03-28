@@ -556,11 +556,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   finePrint: {
-    fontSize: 12,
-    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '500',
+    color: '#64748B',
     textAlign: 'center',
     marginTop: 10,
-    lineHeight: 17,
+    lineHeight: 18,
   },
   legalRow: {
     flexDirection: 'row',
@@ -570,12 +571,13 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   legalLink: {
-    fontSize: 12,
-    color: '#94A3B8',
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
     textDecorationLine: 'underline',
   },
   legalDot: {
-    fontSize: 12,
-    color: '#CBD5E1',
+    fontSize: 13,
+    color: '#94A3B8',
   },
 });
