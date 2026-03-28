@@ -8,291 +8,150 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
   withSpring,
-  withDelay,
-  withRepeat,
-  withSequence,
-  Easing,
-  interpolate,
+  FadeInDown,
 } from 'react-native-reanimated';
 
 const { width } = Dimensions.get('window');
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
 export default function WelcomeScreen() {
-  // Animation values
-  const logoScale = useSharedValue(0);
-  const logoGlow = useSharedValue(0);
-  const titleOpacity = useSharedValue(0);
-  const titleTranslateY = useSharedValue(30);
-  const taglineOpacity = useSharedValue(0);
-  const taglineTranslateY = useSharedValue(20);
-  const subtitleOpacity = useSharedValue(0);
-  const card1 = useSharedValue(0);
-  const card2 = useSharedValue(0);
-  const card3 = useSharedValue(0);
-  const ctaOpacity = useSharedValue(0);
-  const ctaTranslateY = useSharedValue(30);
-  const buttonShimmer = useSharedValue(0);
-  const logoFloat = useSharedValue(0);
+  const logoScale = useSharedValue(0.8);
+  const logoOpacity = useSharedValue(0);
 
   useEffect(() => {
-    // Logo entrance — bouncy spring
-    logoScale.value = withSpring(1, {
-      damping: 12,
-      stiffness: 100,
-      mass: 0.8,
-    });
-
-    // Logo continuous float
-    logoFloat.value = withDelay(
-      800,
-      withRepeat(
-        withSequence(
-          withTiming(-8, { duration: 2000, easing: Easing.inOut(Easing.ease) }),
-          withTiming(8, { duration: 2000, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      )
-    );
-
-    // Logo glow pulse
-    logoGlow.value = withDelay(
-      600,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: 1800, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: 1800, easing: Easing.inOut(Easing.ease) })
-        ),
-        -1,
-        true
-      )
-    );
-
-    // Title slide up + fade
-    titleOpacity.value = withDelay(400, withTiming(1, { duration: 600, easing: Easing.out(Easing.cubic) }));
-    titleTranslateY.value = withDelay(400, withSpring(0, { damping: 14, stiffness: 90 }));
-
-    // Tagline
-    taglineOpacity.value = withDelay(600, withTiming(1, { duration: 500, easing: Easing.out(Easing.cubic) }));
-    taglineTranslateY.value = withDelay(600, withSpring(0, { damping: 14, stiffness: 90 }));
-
-    // Subtitle
-    subtitleOpacity.value = withDelay(800, withTiming(1, { duration: 500 }));
-
-    // Staggered proof cards
-    card1.value = withDelay(950, withSpring(1, { damping: 12, stiffness: 80 }));
-    card2.value = withDelay(1100, withSpring(1, { damping: 12, stiffness: 80 }));
-    card3.value = withDelay(1250, withSpring(1, { damping: 12, stiffness: 80 }));
-
-    // CTA
-    ctaOpacity.value = withDelay(1400, withTiming(1, { duration: 500 }));
-    ctaTranslateY.value = withDelay(1400, withSpring(0, { damping: 14, stiffness: 90 }));
-
-    // Button shimmer loop
-    buttonShimmer.value = withDelay(
-      2000,
-      withRepeat(
-        withSequence(
-          withTiming(1, { duration: 2200, easing: Easing.inOut(Easing.ease) }),
-          withTiming(0, { duration: 400 }),
-          withTiming(0, { duration: 1500 }) // pause between shimmers
-        ),
-        -1
-      )
-    );
+    logoOpacity.value = withTiming(1, { duration: 600 });
+    logoScale.value = withSpring(1, { damping: 14, stiffness: 100 });
   }, []);
 
-  // Animated styles
-  const logoAnimatedStyle = useAnimatedStyle(() => ({
-    transform: [
-      { scale: logoScale.value },
-      { translateY: logoFloat.value },
-    ],
-  }));
-
-  const logoGlowStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(logoGlow.value, [0, 1], [0.3, 0.7]),
-    transform: [
-      { scale: interpolate(logoGlow.value, [0, 1], [1, 1.35]) },
-    ],
-  }));
-
-  const titleStyle = useAnimatedStyle(() => ({
-    opacity: titleOpacity.value,
-    transform: [{ translateY: titleTranslateY.value }],
-  }));
-
-  const taglineStyle = useAnimatedStyle(() => ({
-    opacity: taglineOpacity.value,
-    transform: [{ translateY: taglineTranslateY.value }],
-  }));
-
-  const subtitleStyle = useAnimatedStyle(() => ({
-    opacity: subtitleOpacity.value,
-  }));
-
-  const makeCardStyle = (val: ReturnType<typeof useSharedValue<number>>) =>
-    useAnimatedStyle(() => ({
-      opacity: val.value,
-      transform: [
-        { scale: interpolate(val.value, [0, 1], [0.7, 1]) },
-        { translateY: interpolate(val.value, [0, 1], [30, 0]) },
-      ],
-    }));
-
-  const card1Style = makeCardStyle(card1);
-  const card2Style = makeCardStyle(card2);
-  const card3Style = makeCardStyle(card3);
-
-  const ctaStyle = useAnimatedStyle(() => ({
-    opacity: ctaOpacity.value,
-    transform: [{ translateY: ctaTranslateY.value }],
-  }));
-
-  const shimmerStyle = useAnimatedStyle(() => ({
-    opacity: interpolate(buttonShimmer.value, [0, 0.5, 1], [0, 0.4, 0]),
+  const logoStyle = useAnimatedStyle(() => ({
+    opacity: logoOpacity.value,
+    transform: [{ scale: logoScale.value }],
   }));
 
   return (
-    <LinearGradient colors={['#F0FDF9', '#ECFDF5', '#D1FAE5', '#A7F3D0']} style={styles.container}>
+    <View style={styles.container}>
       <StatusBar style="dark" />
 
+      {/* Top decorative gradient band */}
+      <LinearGradient
+        colors={['#D1FAE5', '#ECFDF5', '#FFFFFF']}
+        style={styles.topGradient}
+      />
+
       <View style={styles.content}>
-        {/* Animated Logo with Glow */}
-        <Animated.View style={[styles.logoContainer, logoAnimatedStyle]}>
-          <Animated.View style={[styles.logoGlow, logoGlowStyle]} />
-          <View style={styles.logoOuter}>
-            <Image
-              source={require('../../assets/images/icon.png')}
-              style={styles.logoImage}
-              resizeMode="contain"
-            />
-          </View>
+        {/* App Icon */}
+        <Animated.View style={[styles.logoWrapper, logoStyle]}>
+          <Image
+            source={require('../../assets/images/icon.png')}
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </Animated.View>
 
-        {/* App Name */}
-        <Animated.View style={titleStyle}>
+        {/* Title block */}
+        <Animated.View entering={FadeInDown.delay(200).duration(500).springify()}>
           <Text style={styles.appName}>Peel</Text>
         </Animated.View>
 
-        {/* Tagline */}
-        <Animated.View style={taglineStyle}>
+        <Animated.View entering={FadeInDown.delay(350).duration(500).springify()}>
           <Text style={styles.tagline}>Scan the label. Reveal the truth.</Text>
         </Animated.View>
 
-        {/* Subtitle */}
-        <Animated.View style={subtitleStyle}>
+        <Animated.View entering={FadeInDown.delay(450).duration(500).springify()}>
           <Text style={styles.subtitle}>
-            Barcode-first food scanning that peels back{'\n'}the packaging and shows what is really{'\n'}hiding inside.
+            See what's really inside your food — seed oils,{'\n'}additives, allergens, and more.
           </Text>
         </Animated.View>
 
-        {/* Animated Proof Cards */}
-        <View style={styles.proofRow}>
-          <Animated.View style={[styles.proofCard, card1Style]}>
-            <Text style={styles.proofValue}>3M+</Text>
-            <Text style={styles.proofLabel}>PRODUCTS</Text>
-          </Animated.View>
-          <Animated.View style={[styles.proofCard, card2Style]}>
-            <Text style={styles.proofValue}>100%</Text>
-            <Text style={styles.proofLabel}>TRANSPARENT</Text>
-          </Animated.View>
-          <Animated.View style={[styles.proofCard, card3Style]}>
-            <Text style={styles.proofValue}>7-Day</Text>
-            <Text style={styles.proofLabel}>TRIAL</Text>
-          </Animated.View>
-        </View>
+        {/* Stats row */}
+        <Animated.View entering={FadeInDown.delay(550).duration(500).springify()} style={styles.statsRow}>
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>3M+</Text>
+            <Text style={styles.statLabel}>Products</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>4.9</Text>
+            <Text style={styles.statLabel}>Stars</Text>
+          </View>
+          <View style={styles.statDivider} />
+          <View style={styles.statItem}>
+            <Text style={styles.statValue}>Free</Text>
+            <Text style={styles.statLabel}>7-Day Trial</Text>
+          </View>
+        </Animated.View>
+
+        {/* Trust line */}
+        <Animated.View entering={FadeInDown.delay(650).duration(400)}>
+          <Text style={styles.trustText}>Trusted by health-conscious families</Text>
+        </Animated.View>
       </View>
 
-      {/* Bottom CTA with shimmer */}
-      <Animated.View style={[styles.bottom, ctaStyle]}>
-        <AnimatedPressable
+      {/* Bottom CTA */}
+      <Animated.View entering={FadeInDown.delay(700).duration(500).springify()} style={styles.bottom}>
+        <Pressable
           testID="get-started-button"
           style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}
           onPress={() => router.push('/onboarding/goals')}
         >
           <LinearGradient
-            colors={['#22C55E', '#16A34A', '#15803D']}
+            colors={['#16A34A', '#15803D']}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.buttonGradient}
           >
             <Text style={styles.buttonText}>Get Started</Text>
             <Text style={styles.buttonArrow}>→</Text>
-
-            {/* Shimmer overlay */}
-            <Animated.View style={[styles.shimmerOverlay, shimmerStyle]}>
-              <LinearGradient
-                colors={['transparent', 'rgba(255,255,255,0.35)', 'transparent']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={StyleSheet.absoluteFill}
-              />
-            </Animated.View>
           </LinearGradient>
-        </AnimatedPressable>
-
+        </Pressable>
       </Animated.View>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingTop: 80,
-    paddingBottom: 50,
-    paddingHorizontal: 28,
-    justifyContent: 'space-between',
+    backgroundColor: '#FFFFFF',
+  },
+  topGradient: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 320,
   },
   content: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
+    paddingHorizontal: 32,
   },
-  logoContainer: {
+  logoWrapper: {
     marginBottom: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  logoGlow: {
-    position: 'absolute',
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    backgroundColor: '#22C55E',
-  },
-  logoOuter: {
-    width: 112,
-    height: 112,
-    borderRadius: 30,
-    backgroundColor: 'rgba(255,255,255,0.82)',
-    alignItems: 'center',
-    justifyContent: 'center',
     shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.16,
-    shadowRadius: 24,
-    elevation: 16,
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.15,
+    shadowRadius: 20,
+    elevation: 12,
   },
   logoImage: {
-    width: 96,
-    height: 96,
+    width: 100,
+    height: 100,
+    borderRadius: 26,
   },
   appName: {
-    fontSize: 56,
+    fontSize: 48,
     fontWeight: '900',
     color: '#0F172A',
-    letterSpacing: -2.5,
-    marginBottom: 6,
+    letterSpacing: -2,
+    textAlign: 'center',
+    marginBottom: 8,
   },
   tagline: {
-    fontSize: 18,
-    fontWeight: '700',
+    fontSize: 17,
+    fontWeight: '600',
     color: '#16A34A',
-    letterSpacing: 0.3,
+    textAlign: 'center',
     marginBottom: 16,
   },
   subtitle: {
@@ -300,87 +159,79 @@ const styles = StyleSheet.create({
     color: '#64748B',
     textAlign: 'center',
     lineHeight: 23,
-    paddingHorizontal: 8,
-    marginBottom: 36,
+    marginBottom: 40,
   },
-  proofRow: {
+  statsRow: {
     flexDirection: 'row',
-    gap: 12,
-    width: '100%',
-  },
-  proofCard: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.85)',
-    borderRadius: 18,
-    paddingVertical: 20,
     alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    paddingVertical: 20,
+    paddingHorizontal: 8,
+    width: '100%',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.9)',
-    shadowColor: '#0F172A',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.06,
-    shadowRadius: 12,
-    elevation: 4,
+    borderColor: '#F1F5F9',
   },
-  proofValue: {
-    fontSize: 24,
-    fontWeight: '900',
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  statValue: {
+    fontSize: 22,
+    fontWeight: '800',
     color: '#0F172A',
-    letterSpacing: -0.5,
+    marginBottom: 3,
   },
-  proofLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+  statLabel: {
+    fontSize: 12,
+    fontWeight: '500',
     color: '#94A3B8',
-    marginTop: 4,
-    letterSpacing: 1.2,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: '#E2E8F0',
+  },
+  trustText: {
+    fontSize: 13,
+    color: '#94A3B8',
+    marginTop: 20,
   },
   bottom: {
+    paddingHorizontal: 24,
+    paddingBottom: 50,
     alignItems: 'center',
     gap: 18,
   },
   button: {
     width: '100%',
-    borderRadius: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     shadowColor: '#16A34A',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.4,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 14,
+    elevation: 8,
   },
   buttonPressed: {
-    opacity: 0.92,
-    transform: [{ scale: 0.97 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.98 }],
   },
   buttonGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 20,
-    gap: 10,
-    overflow: 'hidden',
+    paddingVertical: 18,
+    gap: 8,
   },
   buttonText: {
     color: '#FFFFFF',
-    fontSize: 19,
-    fontWeight: '800',
-    letterSpacing: 0.3,
+    fontSize: 18,
+    fontWeight: '700',
   },
   buttonArrow: {
     color: '#FFFFFF',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '600',
-  },
-  shimmerOverlay: {
-    ...StyleSheet.absoluteFillObject,
-  },
-  signInText: {
-    fontSize: 15,
-    color: '#94A3B8',
-  },
-  signInLink: {
-    color: '#16A34A',
-    fontWeight: '700',
   },
 });
