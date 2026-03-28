@@ -126,13 +126,8 @@ export default function PaywallScreen() {
 
           <View style={styles.socialProof}>
             <View style={styles.proofItem}>
-              <Text style={styles.proofValue}>4.9</Text>
-              <Text style={styles.proofLabel}>Stars</Text>
-            </View>
-            <View style={styles.proofDivider} />
-            <View style={styles.proofItem}>
               <Text style={styles.proofValue}>3M+</Text>
-              <Text style={styles.proofLabel}>Products</Text>
+              <Text style={styles.proofLabel}>Products Scanned</Text>
             </View>
           </View>
           <Text style={styles.trustedText}>Trusted by health-conscious families</Text>

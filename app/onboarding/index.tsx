@@ -70,8 +70,8 @@ export default function WelcomeScreen() {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statValue}>4.9</Text>
-            <Text style={styles.statLabel}>Stars</Text>
+            <Text style={styles.statValue}>100%</Text>
+            <Text style={styles.statLabel}>Transparent</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
