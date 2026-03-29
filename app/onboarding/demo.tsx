@@ -13,14 +13,12 @@ const DEMO_BARCODES = ['0044000032197', '0028400064057', '0049000006346'];
 
 type StoryStep = 0 | 1 | 2 | 3;
 
-// Real product images from Open Food Facts
+// Real product images from Open Food Facts (verified working URLs)
 const IMAGES = {
-  chipsAhoy: 'https://images.openfoodfacts.org/images/products/004/400/003/2197/front_en.6.400.jpg',
-  lays: 'https://images.openfoodfacts.org/images/products/002/840/006/4057/front_en.5.400.jpg',
-  siete: 'https://images.openfoodfacts.org/images/products/085/053/900/0805/front_en.4.400.jpg',
-  oreo: 'https://images.openfoodfacts.org/images/products/004/400/005/5700/front_en.9.400.jpg',
-  ritz: 'https://images.openfoodfacts.org/images/products/004/400/000/7588/front_en.11.400.jpg',
-  annies: 'https://images.openfoodfacts.org/images/products/001/397/200/0097/front_en.6.400.jpg',
+  chipsAhoy: 'https://images.openfoodfacts.org/images/products/004/400/003/2197/front_en.50.400.jpg',
+  ritz: 'https://images.openfoodfacts.org/images/products/004/400/003/1114/front_en.47.400.jpg',
+  annies: 'https://images.openfoodfacts.org/images/products/001/356/249/4019/front_en.13.400.jpg',
+  partake: 'https://images.openfoodfacts.org/images/products/085/276/100/7008/front_en.27.400.jpg',
 };
 
 const COMPARISON_ITEMS = [
@@ -92,13 +90,29 @@ export default function DemoScreen() {
     } as ProductData;
   }, [product]);
 
-  const alternativeProduct = {
-    productName: 'Cheddar Bunnies Crackers',
+  // Step 0: Annie's is the healthier cracker alternative to Ritz
+  const anniesProduct = {
+    productName: 'Organic Cheddar Bunnies',
     brand: 'Annie\'s Homegrown',
+    score: 78,
+    scoreLabel: 'Good',
+    imageUrl: IMAGES.annies,
+    hasSeedOils: false,
+    seedOilsFound: [],
+    hasAdditives: false,
+    processingLevel: 'Low' as const,
+    allergens: ['Wheat', 'Milk'],
+    analysis: 'Made with organic wheat flour and real cheddar cheese. No seed oils, no high fructose corn syrup, and no artificial additives. A much cleaner cracker for the whole family.',
+  };
+
+  // Step 2: Partake is the healthier cookie alternative to Chips Ahoy
+  const cookieAlternative = {
+    productName: 'Chocolate Chip Cookies',
+    brand: 'Partake Foods',
     score: 82,
     scoreLabel: 'Excellent',
-    imageUrl: IMAGES.annies,
-    analysis: 'Made with organic wheat, real cheddar cheese, and no seed oils or artificial additives. A cleaner snack swap the whole family can enjoy.',
+    imageUrl: IMAGES.partake,
+    analysis: 'Vegan, gluten-free, and free of the top 9 allergens. Made with simpler ingredients and no artificial additives. A cleaner cookie swap.',
   };
 
   const getScoreColor = (score: number) => {
@@ -145,7 +159,7 @@ export default function DemoScreen() {
           </View>
         ) : (
           <>
-            {/* Step 0: Then vs Now comparison */}
+            {/* Step 0: Ritz Then vs Now + Annie's healthier alternative */}
             {storyStep === 0 && (
               <Animated.View entering={FadeInDown.duration(350).springify()}>
                 <Text style={styles.title}>Avoiding bad{'\n'}ingredients can{'\n'}be tough...</Text>
@@ -168,10 +182,30 @@ export default function DemoScreen() {
                   </View>
                   <Text style={styles.comparisonCaption}>because our food{'\n'}has changed.</Text>
                 </LinearGradient>
+
+                {/* Healthier alternative to Ritz */}
+                <View style={styles.altSwapSection}>
+                  <Text style={styles.altSwapLabel}>PEEL FINDS A HEALTHIER SWAP</Text>
+                  <View style={[styles.resultPanel, styles.altResultPanel]}>
+                    <View style={styles.resultProductRow}>
+                      <Image source={{ uri: anniesProduct.imageUrl }} style={styles.resultProductImage} />
+                      <View style={styles.resultProductInfo}>
+                        <Text style={styles.resultProductName}>{anniesProduct.productName}</Text>
+                        <Text style={styles.resultProductBrand}>{anniesProduct.brand}</Text>
+                        <View style={styles.resultScoreRow}>
+                          <View style={[styles.scoreDot, { backgroundColor: getScoreColor(anniesProduct.score) }]} />
+                          <Text style={[styles.resultScoreText, { color: getScoreColor(anniesProduct.score) }]}>
+                            {anniesProduct.score}/100 {anniesProduct.scoreLabel}
+                          </Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                </View>
               </Animated.View>
             )}
 
-            {/* Step 1: Impact / feelings */}
+            {/* Step 1: Impact / feelings (Chips Ahoy — different product from Step 0) */}
             {storyStep === 1 && (
               <Animated.View entering={FadeInDown.duration(350).springify()}>
                 <Text style={styles.title}>See the impact{'\n'}of your choices</Text>
@@ -179,11 +213,11 @@ export default function DemoScreen() {
 
                 <LinearGradient colors={['#F0FDF4', '#E8F5E9', '#D1FAE5']} style={styles.feelingPanel}>
                   <Image
-                    source={{ uri: previewProduct.imageUrl || IMAGES.chipsAhoy }}
+                    source={{ uri: IMAGES.chipsAhoy }}
                     style={styles.heroProductImage}
                   />
                   <Text style={styles.feelingQuestion}>
-                    How do these {previewProduct.productName.toLowerCase().includes('chip') ? 'chips' : 'cookies'} make you feel after eating them?
+                    How do these cookies make you feel after eating them?
                   </Text>
 
                   <View style={styles.feelingOptions}>
@@ -197,14 +231,14 @@ export default function DemoScreen() {
               </Animated.View>
             )}
 
-            {/* Step 2: Reveal better option */}
+            {/* Step 2: Chips Ahoy → Partake cookie swap */}
             {storyStep === 2 && (
               <Animated.View entering={FadeInDown.duration(350).springify()}>
                 <Text style={styles.title}>Peel reveals a{'\n'}better option</Text>
                 <Text style={styles.subtitle}>Instead of guessing, Peel shows why one product is worth skipping and what to try instead.</Text>
 
                 <View style={styles.revealStack}>
-                  {/* Bad product */}
+                  {/* Bad product — Chips Ahoy */}
                   <View style={styles.resultPanel}>
                     <Text style={styles.resultPanelEyebrow}>AND HERE'S WHY YOU SHOULDN'T</Text>
                     <View style={styles.resultProductRow}>
@@ -232,32 +266,32 @@ export default function DemoScreen() {
                     <Text style={styles.arrowLabel}>Reveal better alternative</Text>
                   </View>
 
-                  {/* Good alternative */}
+                  {/* Good alternative — Partake cookies */}
                   <View style={[styles.resultPanel, styles.altResultPanel]}>
                     <Text style={styles.altPanelEyebrow}>TRY THIS INSTEAD</Text>
                     <View style={styles.resultProductRow}>
                       <Image
-                        source={{ uri: alternativeProduct.imageUrl }}
+                        source={{ uri: cookieAlternative.imageUrl }}
                         style={styles.resultProductImage}
                       />
                       <View style={styles.resultProductInfo}>
-                        <Text style={styles.resultProductName}>{alternativeProduct.productName}</Text>
-                        <Text style={styles.resultProductBrand}>{alternativeProduct.brand}</Text>
+                        <Text style={styles.resultProductName}>{cookieAlternative.productName}</Text>
+                        <Text style={styles.resultProductBrand}>{cookieAlternative.brand}</Text>
                         <View style={styles.resultScoreRow}>
                           <View style={[styles.scoreDot, { backgroundColor: '#16A34A' }]} />
                           <Text style={[styles.resultScoreText, { color: '#15803D' }]}>
-                            {alternativeProduct.score}/100 {alternativeProduct.scoreLabel}
+                            {cookieAlternative.score}/100 {cookieAlternative.scoreLabel}
                           </Text>
                         </View>
                       </View>
                     </View>
-                    <Text style={styles.resultReason}>{alternativeProduct.analysis}</Text>
+                    <Text style={styles.resultReason}>{cookieAlternative.analysis}</Text>
                   </View>
                 </View>
               </Animated.View>
             )}
 
-            {/* Step 3: Full preview */}
+            {/* Step 3: Healthy product preview (Annie's — shows what a good scan looks like) */}
             {storyStep === 3 && (
               <Animated.View entering={FadeInDown.duration(350).springify()}>
                 <Text style={styles.title}>Scan a barcode.{'\n'}Know what is inside.</Text>
@@ -273,17 +307,17 @@ export default function DemoScreen() {
 
                   <View style={styles.previewRow}>
                     <Image
-                      source={{ uri: previewProduct.imageUrl || IMAGES.chipsAhoy }}
+                      source={{ uri: anniesProduct.imageUrl }}
                       style={styles.previewImage}
                     />
                     <View style={styles.previewInfo}>
-                      <Text style={styles.previewName} numberOfLines={2}>{previewProduct.productName}</Text>
-                      <Text style={styles.previewBrand}>{previewProduct.brand}</Text>
-                      <LinearGradient colors={getScoreBg(previewProduct.score)} style={styles.previewScoreBadge}>
-                        <Text style={[styles.previewScoreNumber, { color: getScoreColor(previewProduct.score) }]}>{previewProduct.score}</Text>
-                        <Text style={[styles.previewScoreOf, { color: getScoreColor(previewProduct.score) }]}>/100</Text>
+                      <Text style={styles.previewName} numberOfLines={2}>{anniesProduct.productName}</Text>
+                      <Text style={styles.previewBrand}>{anniesProduct.brand}</Text>
+                      <LinearGradient colors={getScoreBg(anniesProduct.score)} style={styles.previewScoreBadge}>
+                        <Text style={[styles.previewScoreNumber, { color: getScoreColor(anniesProduct.score) }]}>{anniesProduct.score}</Text>
+                        <Text style={[styles.previewScoreOf, { color: getScoreColor(anniesProduct.score) }]}>/100</Text>
                         <View style={styles.previewScoreDivider} />
-                        <Text style={[styles.previewScoreLabel, { color: getScoreColor(previewProduct.score) }]}>{previewProduct.scoreLabel}</Text>
+                        <Text style={[styles.previewScoreLabel, { color: getScoreColor(anniesProduct.score) }]}>{anniesProduct.scoreLabel}</Text>
                       </LinearGradient>
                     </View>
                   </View>
@@ -291,9 +325,9 @@ export default function DemoScreen() {
 
                 <View style={styles.valueCard}>
                   <Text style={styles.valueTitle}>What Peel shows you instantly</Text>
-                  <ValueRow text={previewProduct.hasSeedOils ? 'Seed oils detected immediately' : 'Seed oil check in one tap'} />
-                  <ValueRow text={`${previewProduct.processingLevel} processing profile, clearly labeled`} />
-                  <ValueRow text={previewProduct.allergens.length > 0 ? `${previewProduct.allergens.length} allergen warnings flagged` : 'Allergen warnings when they appear'} />
+                  <ValueRow text={anniesProduct.hasSeedOils ? 'Seed oils detected immediately' : 'No seed oils detected ✓'} />
+                  <ValueRow text={`${anniesProduct.processingLevel} processing profile, clearly labeled`} />
+                  <ValueRow text={anniesProduct.allergens.length > 0 ? `${anniesProduct.allergens.length} allergen warnings flagged` : 'Allergen warnings when they appear'} />
                   <ValueRow text="Cleaner alternative suggestions before checkout" />
                 </View>
 
@@ -302,7 +336,7 @@ export default function DemoScreen() {
                     <View style={styles.analysisDot} />
                     <Text style={styles.analysisTitle}>Peel's Analysis</Text>
                   </View>
-                  <Text style={styles.analysisText}>{previewProduct.analysis}</Text>
+                  <Text style={styles.analysisText}>{anniesProduct.analysis}</Text>
                 </View>
               </Animated.View>
             )}
@@ -443,6 +477,10 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     lineHeight: 26,
   },
+
+  // Step 0: Alt swap section
+  altSwapSection: { marginTop: 18 },
+  altSwapLabel: { fontSize: 11, fontWeight: '800', color: '#15803D', letterSpacing: 1, textAlign: 'center', marginBottom: 10 },
 
   // Step 1: Feelings
   feelingPanel: { borderRadius: 24, padding: 24, alignItems: 'center' },
