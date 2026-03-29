@@ -16,7 +16,8 @@ type StoryStep = 0 | 1 | 2 | 3 | 4;
 // Real product images from Open Food Facts (verified working URLs)
 const IMAGES = {
   chipsAhoy: 'https://images.openfoodfacts.org/images/products/004/400/003/2197/front_en.50.400.jpg',
-  heinz: 'https://images.openfoodfacts.org/images/products/001/300/000/6057/front_en.85.400.jpg',
+  heinzOld: 'https://images.openfoodfacts.org/images/products/871/570/042/2893/front_de.47.400.jpg',
+  heinzNew: 'https://images.openfoodfacts.org/images/products/000/008/715/7277/front_en.53.400.jpg',
   annies: 'https://images.openfoodfacts.org/images/products/001/356/249/4019/front_en.13.400.jpg',
   partake: 'https://images.openfoodfacts.org/images/products/085/276/100/7008/front_en.27.400.jpg',
 };
@@ -27,7 +28,7 @@ const COMPARISON_ITEMS = [
     product: 'Heinz Ketchup',
     badgeColor: '#15803D',
     ingredients: 'Ripened Tomatoes, Pickling Vinegar, Cane Sugar, Salt, Fresh Ground Spices',
-    imageUrl: IMAGES.heinz,
+    imageUrl: IMAGES.heinzOld,
   },
   {
     title: 'Now',
@@ -35,7 +36,7 @@ const COMPARISON_ITEMS = [
     badgeColor: '#991B1B',
     ingredients: 'Tomato Concentrate From Red Ripe Tomatoes, Distilled Vinegar, High Fructose Corn Syrup, Corn Syrup, Salt, Spice, Onion Powder, Natural Flavoring',
     highlight: true,
-    imageUrl: IMAGES.heinz,
+    imageUrl: IMAGES.heinzNew,
   },
 ];
 
