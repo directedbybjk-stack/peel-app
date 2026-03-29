@@ -16,7 +16,7 @@ type StoryStep = 0 | 1 | 2 | 3;
 // Real product images from Open Food Facts (verified working URLs)
 const IMAGES = {
   chipsAhoy: 'https://images.openfoodfacts.org/images/products/004/400/003/2197/front_en.50.400.jpg',
-  ritz: 'https://images.openfoodfacts.org/images/products/004/400/003/1114/front_en.47.400.jpg',
+  heinz: 'https://images.openfoodfacts.org/images/products/001/300/000/6057/front_en.85.400.jpg',
   annies: 'https://images.openfoodfacts.org/images/products/001/356/249/4019/front_en.13.400.jpg',
   partake: 'https://images.openfoodfacts.org/images/products/085/276/100/7008/front_en.27.400.jpg',
 };
@@ -24,18 +24,18 @@ const IMAGES = {
 const COMPARISON_ITEMS = [
   {
     title: 'Then',
-    product: 'Ritz Crackers',
+    product: 'Heinz Ketchup',
     badgeColor: '#15803D',
-    ingredients: 'Enriched Flour, Butter, Sugar, Salt, Baking Soda',
-    imageUrl: IMAGES.ritz,
+    ingredients: 'Ripened Tomatoes, Pickling Vinegar, Cane Sugar, Salt, Fresh Ground Spices',
+    imageUrl: IMAGES.heinz,
   },
   {
     title: 'Now',
-    product: 'Ritz Crackers',
+    product: 'Heinz Ketchup',
     badgeColor: '#991B1B',
-    ingredients: 'Unbleached Enriched Flour, Soybean Oil and/or Canola Oil, Palm Oil, Sugar, Salt, High Fructose Corn Syrup, Soy Lecithin, Natural Flavor',
+    ingredients: 'Tomato Concentrate From Red Ripe Tomatoes, Distilled Vinegar, High Fructose Corn Syrup, Corn Syrup, Salt, Spice, Onion Powder, Natural Flavoring',
     highlight: true,
-    imageUrl: IMAGES.ritz,
+    imageUrl: IMAGES.heinz,
   },
 ];
 
@@ -183,25 +183,6 @@ export default function DemoScreen() {
                   <Text style={styles.comparisonCaption}>because our food{'\n'}has changed.</Text>
                 </LinearGradient>
 
-                {/* Healthier alternative to Ritz */}
-                <View style={styles.altSwapSection}>
-                  <Text style={styles.altSwapLabel}>PEEL FINDS A HEALTHIER SWAP</Text>
-                  <View style={[styles.resultPanel, styles.altResultPanel]}>
-                    <View style={styles.resultProductRow}>
-                      <Image source={{ uri: anniesProduct.imageUrl }} style={styles.resultProductImage} />
-                      <View style={styles.resultProductInfo}>
-                        <Text style={styles.resultProductName}>{anniesProduct.productName}</Text>
-                        <Text style={styles.resultProductBrand}>{anniesProduct.brand}</Text>
-                        <View style={styles.resultScoreRow}>
-                          <View style={[styles.scoreDot, { backgroundColor: getScoreColor(anniesProduct.score) }]} />
-                          <Text style={[styles.resultScoreText, { color: getScoreColor(anniesProduct.score) }]}>
-                            {anniesProduct.score}/100 {anniesProduct.scoreLabel}
-                          </Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </View>
               </Animated.View>
             )}
 
@@ -358,7 +339,7 @@ export default function DemoScreen() {
 
 /** Render ingredients with bad ones in bold red */
 function highlightBadIngredients(text: string) {
-  const BAD = ['Soybean Oil', 'Canola Oil', 'Palm Oil', 'High Fructose Corn Syrup', 'Soy Lecithin', 'Natural Flavor'];
+  const BAD = ['Soybean Oil', 'Canola Oil', 'Palm Oil', 'High Fructose Corn Syrup', 'Corn Syrup', 'Soy Lecithin', 'Natural Flavor', 'Natural Flavoring'];
   const parts: { text: string; bad: boolean }[] = [];
   let remaining = text;
 
