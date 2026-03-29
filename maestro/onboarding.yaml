@@ -74,6 +74,11 @@ appId: com.anonymous.peelapp
     id: "start-scanning-button"
 - waitForAnimationToEnd
 - waitForAnimationToEnd
+- takeScreenshot: "10-demo-story-5"
+- tapOn:
+    id: "start-scanning-button"
+- waitForAnimationToEnd
+- waitForAnimationToEnd
 - assertVisible:
     id: "subscribe-button"
-- takeScreenshot: "10-paywall-after-onboarding"
+- takeScreenshot: "11-paywall-after-onboarding"
