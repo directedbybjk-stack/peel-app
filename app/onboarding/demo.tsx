@@ -11,7 +11,7 @@ import { savePreferences } from '@/lib/storage';
 
 const DEMO_BARCODES = ['0044000032197', '0028400064057', '0049000006346'];
 
-type StoryStep = 0 | 1 | 2 | 3;
+type StoryStep = 0 | 1 | 2 | 3 | 4;
 
 // Real product images from Open Food Facts (verified working URLs)
 const IMAGES = {
@@ -51,6 +51,7 @@ export default function DemoScreen() {
   const [product, setProduct] = useState<ProductData | null>(null);
   const [loading, setLoading] = useState(true);
   const [storyStep, setStoryStep] = useState<StoryStep>(0);
+  const [selectedFeeling, setSelectedFeeling] = useState<string | null>(null);
 
   useEffect(() => {
     async function tryBarcodes() {
@@ -131,7 +132,7 @@ export default function DemoScreen() {
   };
 
   const handleContinue = async () => {
-    if (storyStep < 3) {
+    if (storyStep < 4) {
       setStoryStep((prev) => (prev + 1) as StoryStep);
       return;
     }
@@ -139,7 +140,8 @@ export default function DemoScreen() {
     router.replace('/paywall');
   };
 
-  const progressWidth = (((storyStep + 1) / 4) * 100) as number;
+  const progressWidth = (((storyStep + 1) / 5) * 100) as number;
+  const continueDisabled = storyStep === 1 && !selectedFeeling;
 
   return (
     <View style={styles.container}>
@@ -204,23 +206,33 @@ export default function DemoScreen() {
 
                   <View style={styles.feelingOptions}>
                     {FEELING_OPTIONS.map((option) => (
-                      <View key={option} style={styles.feelingOption}>
-                        <Text style={styles.feelingOptionText}>{option}</Text>
-                      </View>
+                      <Pressable
+                        key={option}
+                        testID={`feeling-${option.toLowerCase().replace(/[^a-z0-9]+/g, '_')}`}
+                        style={({ pressed }) => [
+                          styles.feelingOption,
+                          selectedFeeling === option && styles.feelingOptionSelected,
+                          pressed && styles.feelingOptionPressed,
+                        ]}
+                        onPress={() => setSelectedFeeling(option)}
+                      >
+                        <Text style={[styles.feelingOptionText, selectedFeeling === option && styles.feelingOptionTextSelected]}>
+                          {option}
+                        </Text>
+                      </Pressable>
                     ))}
                   </View>
                 </LinearGradient>
               </Animated.View>
             )}
 
-            {/* Step 2: Chips Ahoy → Partake cookie swap */}
+            {/* Step 2: Why to skip the current product */}
             {storyStep === 2 && (
               <Animated.View entering={FadeInDown.duration(350).springify()}>
                 <Text style={styles.title}>Peel reveals a{'\n'}better option</Text>
                 <Text style={styles.subtitle}>Instead of guessing, Peel shows why one product is worth skipping and what to try instead.</Text>
 
                 <View style={styles.revealStack}>
-                  {/* Bad product — Chips Ahoy */}
                   <View style={styles.resultPanel}>
                     <Text style={styles.resultPanelEyebrow}>AND HERE'S WHY YOU SHOULDN'T</Text>
                     <View style={styles.resultProductRow}>
@@ -241,14 +253,17 @@ export default function DemoScreen() {
                     </View>
                     <Text style={styles.resultReason}>{previewProduct.analysis}</Text>
                   </View>
+                </View>
+              </Animated.View>
+            )}
 
-                  {/* Arrow */}
-                  <View style={styles.arrowWrap}>
-                    <Text style={styles.arrowText}>↓</Text>
-                    <Text style={styles.arrowLabel}>Reveal better alternative</Text>
-                  </View>
+            {/* Step 3: Better alternative reveal */}
+            {storyStep === 3 && (
+              <Animated.View entering={FadeInDown.duration(350).springify()}>
+                <Text style={styles.title}>Here is the better{'\n'}option instead</Text>
+                <Text style={styles.subtitle}>Peel does not just flag the problem. It points you to a cleaner alternative you can feel good about buying.</Text>
 
-                  {/* Good alternative — Partake cookies */}
+                <View style={styles.revealStack}>
                   <View style={[styles.resultPanel, styles.altResultPanel]}>
                     <Text style={styles.altPanelEyebrow}>TRY THIS INSTEAD</Text>
                     <View style={styles.resultProductRow}>
@@ -273,8 +288,8 @@ export default function DemoScreen() {
               </Animated.View>
             )}
 
-            {/* Step 3: Healthy product preview (Annie's — shows what a good scan looks like) */}
-            {storyStep === 3 && (
+            {/* Step 4: Healthy product preview (Annie's — shows what a good scan looks like) */}
+            {storyStep === 4 && (
               <Animated.View entering={FadeInDown.duration(350).springify()}>
                 <Text style={styles.title}>Scan a barcode.{'\n'}Know what is inside.</Text>
                 <Text style={styles.subtitle}>This is exactly what Peel shows you in seconds before the product goes in your cart.</Text>
@@ -327,9 +342,18 @@ export default function DemoScreen() {
       </ScrollView>
 
       <View style={styles.bottomFixed}>
-        <Pressable testID="start-scanning-button" style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]} onPress={handleContinue}>
+        <Pressable
+          testID="start-scanning-button"
+          disabled={continueDisabled}
+          style={({ pressed }) => [
+            styles.button,
+            continueDisabled && styles.buttonDisabled,
+            pressed && !continueDisabled && styles.buttonPressed,
+          ]}
+          onPress={handleContinue}
+        >
           <LinearGradient colors={['#16A34A', '#15803D']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.buttonGradient}>
-            <Text style={styles.buttonText}>{storyStep === 3 ? 'Continue to Trial' : 'Continue'}</Text>
+            <Text style={styles.buttonText}>{storyStep === 4 ? 'Continue to Trial' : 'Continue'}</Text>
             <Text style={styles.buttonArrow}>→</Text>
           </LinearGradient>
         </Pressable>
@@ -485,6 +509,8 @@ const styles = StyleSheet.create({
   feelingOption: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
     paddingVertical: 18,
     paddingHorizontal: 18,
     alignItems: 'center',
@@ -493,7 +519,10 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
   },
+  feelingOptionSelected: { backgroundColor: '#ECFDF5', borderColor: '#16A34A' },
+  feelingOptionPressed: { opacity: 0.92 },
   feelingOptionText: { fontSize: 16, fontWeight: '600', color: '#334155' },
+  feelingOptionTextSelected: { color: '#166534' },
 
   // Step 2: Reveal
   revealStack: { gap: 14 },
@@ -580,6 +609,7 @@ const styles = StyleSheet.create({
 
   bottomFixed: { position: 'absolute', left: 0, right: 0, bottom: 0, paddingHorizontal: 24, paddingTop: 12, paddingBottom: 40, backgroundColor: '#FFFFFF', borderTopWidth: 1, borderTopColor: '#F1F5F9' },
   button: { width: '100%', borderRadius: 16, overflow: 'hidden' },
+  buttonDisabled: { opacity: 0.6 },
   buttonPressed: { opacity: 0.92, transform: [{ scale: 0.985 }] },
   buttonGradient: { borderRadius: 16, paddingVertical: 18, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, shadowColor: '#16A34A', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 10, elevation: 6 },
   buttonText: { fontSize: 17, fontWeight: '700', color: '#FFFFFF' },
