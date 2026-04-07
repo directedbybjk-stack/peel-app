@@ -1,36 +1,70 @@
 import { useEffect, useMemo, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ScrollView, Alert, ActivityIndicator } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import * as Linking from 'expo-linking';
-import Purchases, { type PurchasesOffering } from 'react-native-purchases';
+import Purchases, { type PurchasesOffering, type PurchasesPackage } from 'react-native-purchases';
 
-import { PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '@/lib/appConfig';
-import { configureRevenueCat, getPackageForPlan, hasPremiumAccess } from '@/lib/revenuecat';
+import { CONTACT_URL, PRIVACY_POLICY_URL, TERMS_OF_SERVICE_URL } from '@/lib/appConfig';
+import { useOnboarding } from '@/app/_layout';
+import { trackMetaPurchase, trackMetaStartTrial } from '@/lib/metaTracking';
+import { getPackageForPlan, hasAvailableSubscriptionPackages, hasPremiumAccess, loadCurrentOfferingWithTimeout } from '@/lib/revenuecat';
 import { setOnboardingComplete } from '@/lib/storage';
 
 type Plan = 'monthly' | 'yearly';
 
+function getIntroOfferCopy(aPackage: PurchasesPackage | null) {
+  const introPrice = aPackage?.product.introPrice ?? null;
+  const hasFreeTrial = Boolean(introPrice && introPrice.price === 0);
+  const periodUnit = introPrice?.periodUnit?.toLowerCase() ?? '';
+  const periodCount = introPrice?.periodNumberOfUnits ?? 0;
+  const periodLabel = periodUnit && periodCount
+    ? `${periodCount}-${periodUnit.toUpperCase()} FREE TRIAL`
+    : null;
+
+  return {
+    introPrice,
+    hasFreeTrial,
+    periodUnit,
+    periodCount,
+    periodLabel,
+  };
+}
+
 export default function PaywallScreen() {
+  const { setDone: setOnboardingDone } = useOnboarding();
   const [selectedPlan, setSelectedPlan] = useState<Plan>('yearly');
   const [offering, setOffering] = useState<PurchasesOffering | null>(null);
   const [loadingOfferings, setLoadingOfferings] = useState(true);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [offeringsError, setOfferingsError] = useState<string | null>(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
 
   useEffect(() => {
     let mounted = true;
 
     async function loadOffering() {
+      if (mounted) {
+        setLoadingOfferings(true);
+        setOfferingsError(null);
+      }
+
       try {
-        await configureRevenueCat();
-        const offerings = await Purchases.getOfferings();
+        const currentOffering = await loadCurrentOfferingWithTimeout();
         if (mounted) {
-          setOffering(offerings.current);
+          setOffering(currentOffering);
+          setOfferingsError(
+            hasAvailableSubscriptionPackages(currentOffering)
+              ? null
+              : 'Subscriptions are currently unavailable on this device.'
+          );
         }
-      } catch {
+      } catch (error) {
+        console.error('Failed to load RevenueCat offerings', error);
         if (mounted) {
           setOffering(null);
+          setOfferingsError('We could not load subscription plans right now. Please try again.');
         }
       } finally {
         if (mounted) {
@@ -44,15 +78,33 @@ export default function PaywallScreen() {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [loadAttempt]);
 
   const monthlyPackage = useMemo(() => getPackageForPlan(offering, 'monthly'), [offering]);
   const yearlyPackage = useMemo(() => getPackageForPlan(offering, 'yearly'), [offering]);
   const selectedPackage = selectedPlan === 'yearly' ? yearlyPackage : monthlyPackage;
+  const subscriptionsUnavailable = !loadingOfferings && !selectedPackage && !monthlyPackage && !yearlyPackage;
+  const monthlyIntro = getIntroOfferCopy(monthlyPackage);
+  const yearlyIntro = getIntroOfferCopy(yearlyPackage);
+  const selectedIntro = selectedPlan === 'yearly' ? yearlyIntro : monthlyIntro;
+
+  useEffect(() => {
+    if (selectedPlan === 'yearly' && !yearlyPackage && monthlyPackage) {
+      setSelectedPlan('monthly');
+      return;
+    }
+
+    if (selectedPlan === 'monthly' && !monthlyPackage && yearlyPackage) {
+      setSelectedPlan('yearly');
+    }
+  }, [monthlyPackage, selectedPlan, yearlyPackage]);
 
   const handleSubscribe = async () => {
     if (!selectedPackage) {
-      Alert.alert('Subscription unavailable', 'The subscription options are still loading. Try again in a moment.');
+      Alert.alert(
+        'Subscription unavailable',
+        'Peel could not load a purchasable subscription for this device right now. Please try again in a moment or contact support.'
+      );
       return;
     }
 
@@ -65,11 +117,30 @@ export default function PaywallScreen() {
         return;
       }
 
+      const hasFreeTrial = Boolean(
+        selectedPackage.product.introPrice && selectedPackage.product.introPrice.price === 0
+      );
+
+      if (hasFreeTrial) {
+        await trackMetaStartTrial({
+          value: selectedPackage.product.price,
+          currency: selectedPackage.product.currencyCode,
+          plan: selectedPlan,
+        });
+      } else {
+        await trackMetaPurchase({
+          value: selectedPackage.product.price,
+          currency: selectedPackage.product.currencyCode,
+          plan: selectedPlan,
+        });
+      }
       await setOnboardingComplete();
+      setOnboardingDone(true);
       router.replace('/(tabs)');
     } catch (error) {
       const purchaseError = error as { userCancelled?: boolean; message?: string };
       if (!purchaseError.userCancelled) {
+        console.error('RevenueCat purchase failed', error);
         Alert.alert('Purchase failed', purchaseError.message || 'We could not complete your purchase. Please try again.');
       }
     } finally {
@@ -88,17 +159,19 @@ export default function PaywallScreen() {
       }
 
       await setOnboardingComplete();
+      setOnboardingDone(true);
       router.replace('/(tabs)');
     } catch (error) {
       const restoreError = error as { message?: string };
+      console.error('RevenueCat restore failed', error);
       Alert.alert('Restore failed', restoreError.message || 'We could not restore your purchases. Please try again.');
     } finally {
       setIsProcessing(false);
     }
   };
 
-  const monthlyPrice = monthlyPackage?.product.priceString || '$14.99';
-  const yearlyPrice = yearlyPackage?.product.priceString || '$69.99';
+  const monthlyPrice = monthlyPackage?.product.priceString;
+  const yearlyPrice = yearlyPackage?.product.priceString;
 
   const handleClose = () => {
     if (router.canGoBack()) {
@@ -146,22 +219,47 @@ export default function PaywallScreen() {
 
         {/* Pricing plans */}
         <View style={styles.pricingSection}>
+          {loadingOfferings && (
+            <View style={styles.loadingCard}>
+              <ActivityIndicator size="small" color="#16A34A" />
+              <Text style={styles.loadingTitle}>Loading subscription plans...</Text>
+              <Text style={styles.loadingSubtitle}>
+                If this takes too long, Peel will show a retry option instead of staying stuck.
+              </Text>
+            </View>
+          )}
+
           {/* Monthly */}
           <Pressable
             testID="plan-monthly"
             accessible
             accessibilityRole="button"
-            accessibilityState={{ selected: selectedPlan === 'monthly' }}
-            style={[styles.planCard, selectedPlan === 'monthly' && styles.planCardSelected]}
+            accessibilityState={{ selected: selectedPlan === 'monthly', disabled: !monthlyPackage }}
+            disabled={!monthlyPackage}
+            style={[
+              styles.planCard,
+              selectedPlan === 'monthly' && styles.planCardSelected,
+              !monthlyPackage && styles.planCardDisabled,
+            ]}
             onPress={() => setSelectedPlan('monthly')}
           >
+            {selectedPlan === 'monthly' && monthlyIntro.periodLabel && (
+              <View style={styles.bestValueLabel}>
+                <Text style={styles.bestValueText}>{monthlyIntro.periodLabel}</Text>
+              </View>
+            )}
             <View style={styles.planLeft}>
               <View style={[styles.radio, selectedPlan === 'monthly' && styles.radioSelected]}>
                 {selectedPlan === 'monthly' && <View style={styles.radioInner} />}
               </View>
               <View>
+                <Text style={styles.planBenefit}>
+                  {monthlyIntro.hasFreeTrial ? 'Start with a free trial' : 'Flexible monthly plan'}
+                </Text>
                 <Text style={[styles.planName, selectedPlan === 'monthly' && styles.planNameSelected]}>Monthly</Text>
-                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>{monthlyPrice}/month</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'monthly' && styles.planPriceSelected]}>
+                  {monthlyPrice ? `${monthlyPrice}/month` : 'Currently unavailable'}
+                </Text>
               </View>
             </View>
           </Pressable>
@@ -171,8 +269,13 @@ export default function PaywallScreen() {
             testID="plan-yearly"
             accessible
             accessibilityRole="button"
-            accessibilityState={{ selected: selectedPlan === 'yearly' }}
-            style={[styles.planCard, selectedPlan === 'yearly' && styles.planCardSelected]}
+            accessibilityState={{ selected: selectedPlan === 'yearly', disabled: !yearlyPackage }}
+            disabled={!yearlyPackage}
+            style={[
+              styles.planCard,
+              selectedPlan === 'yearly' && styles.planCardSelected,
+              !yearlyPackage && styles.planCardDisabled,
+            ]}
             onPress={() => setSelectedPlan('yearly')}
           >
             {selectedPlan === 'yearly' && (
@@ -185,23 +288,44 @@ export default function PaywallScreen() {
                 {selectedPlan === 'yearly' && <View style={styles.radioInner} />}
               </View>
               <View>
-                <Text style={styles.planBenefit}>Best value after trial</Text>
+                <Text style={styles.planBenefit}>
+                  {yearlyIntro.hasFreeTrial ? 'Best value after trial' : 'Best yearly value'}
+                </Text>
                 <Text style={[styles.planName, selectedPlan === 'yearly' && styles.planNameSelected]}>Yearly</Text>
-                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>{yearlyPrice}/year</Text>
+                <Text style={[styles.planPrice, selectedPlan === 'yearly' && styles.planPriceSelected]}>
+                  {yearlyPrice ? `${yearlyPrice}/year` : 'Currently unavailable'}
+                </Text>
               </View>
             </View>
-            <LinearGradient colors={['#16A34A', '#15803D']} style={styles.trialBadge}>
-              <Text style={styles.trialBadgeText}>7-DAY FREE TRIAL</Text>
-            </LinearGradient>
+            {yearlyPackage && yearlyIntro.periodLabel && (
+              <LinearGradient colors={['#16A34A', '#15803D']} style={styles.trialBadge}>
+                <Text style={styles.trialBadgeText}>{yearlyIntro.periodLabel}</Text>
+              </LinearGradient>
+            )}
           </Pressable>
         </View>
 
-        {selectedPlan === 'yearly' && (
+        {selectedPackage && selectedIntro.hasFreeTrial && (
           <View style={styles.noPaymentRow}>
             <View style={styles.checkCircle}>
               <Text style={styles.checkMark}>✓</Text>
             </View>
             <Text style={styles.noPaymentText}>No Payment Due Now</Text>
+          </View>
+        )}
+
+        {subscriptionsUnavailable && (
+          <View style={styles.unavailableCard}>
+            <Text style={styles.unavailableTitle}>Subscriptions unavailable</Text>
+            <Text style={styles.unavailableText}>
+              {offeringsError ?? 'Peel could not load a purchasable subscription right now.'}
+            </Text>
+            <Pressable style={styles.retryButton} onPress={() => setLoadAttempt((attempt) => attempt + 1)}>
+              <Text style={styles.retryButtonText}>Try again</Text>
+            </Pressable>
+            <Pressable onPress={() => Linking.openURL(CONTACT_URL)}>
+              <Text style={styles.unavailableLink}>Contact support</Text>
+            </Pressable>
           </View>
         )}
 
@@ -211,10 +335,10 @@ export default function PaywallScreen() {
       <View style={styles.bottomFixed}>
         <Pressable
           testID="subscribe-button"
-          disabled={loadingOfferings || isProcessing}
+          disabled={loadingOfferings || isProcessing || !selectedPackage}
           style={[
             { width: '100%' },
-            (loadingOfferings || isProcessing) && styles.buttonDisabled,
+            (loadingOfferings || isProcessing || !selectedPackage) && styles.buttonDisabled,
           ]}
           onPress={handleSubscribe}
         >
@@ -225,15 +349,31 @@ export default function PaywallScreen() {
             style={styles.ctaButton}
           >
             <Text style={styles.ctaText}>
-              {isProcessing ? 'Working...' : selectedPlan === 'yearly' ? 'Try for $0.00' : `Subscribe for ${monthlyPrice}/mo`}
+              {isProcessing
+                ? 'Working...'
+                  : !selectedPackage
+                    ? 'Subscriptions unavailable'
+                    : selectedPlan === 'yearly'
+                      ? selectedIntro.hasFreeTrial
+                        ? `Start ${selectedIntro.periodCount}-Day Free Trial`
+                        : `Subscribe for ${yearlyPrice}/yr`
+                      : selectedIntro.hasFreeTrial
+                        ? `Start ${selectedIntro.periodCount}-Day Free Trial`
+                        : `Subscribe for ${monthlyPrice}/mo`}
             </Text>
           </LinearGradient>
         </Pressable>
 
         <Text style={styles.finePrint}>
-          {selectedPlan === 'yearly'
-            ? `7 days FREE, then ${yearlyPrice} per year. Cancel anytime.`
-            : `Billed at ${monthlyPrice}/month. Cancel anytime.`}
+          {!selectedPackage
+            ? 'Restore purchases remains available below if you already subscribed.'
+            : selectedPlan === 'yearly'
+              ? selectedIntro.hasFreeTrial
+                ? `${selectedIntro.periodCount} ${selectedIntro.periodUnit || 'period'}${selectedIntro.periodCount === 1 ? '' : 's'} FREE, then ${yearlyPrice} per year. Cancel anytime.`
+                : `Billed at ${yearlyPrice}/year. Cancel anytime.`
+              : selectedIntro.hasFreeTrial
+                ? `${selectedIntro.periodCount} ${selectedIntro.periodUnit || 'period'}${selectedIntro.periodCount === 1 ? '' : 's'} FREE, then ${monthlyPrice}/month. Cancel anytime.`
+                : `Billed at ${monthlyPrice}/month. Cancel anytime.`}
         </Text>
 
         <View style={styles.legalRow}>
@@ -407,6 +547,28 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 14,
   },
+  loadingCard: {
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#F8FAFC',
+    borderRadius: 16,
+    paddingVertical: 18,
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  loadingTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  loadingSubtitle: {
+    fontSize: 13,
+    lineHeight: 20,
+    color: '#64748B',
+    textAlign: 'center',
+  },
   planCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -422,6 +584,9 @@ const styles = StyleSheet.create({
     borderColor: '#16A34A',
     backgroundColor: '#F0FDF4',
     borderWidth: 2,
+  },
+  planCardDisabled: {
+    opacity: 0.5,
   },
   bestValueLabel: {
     position: 'absolute',
@@ -522,6 +687,43 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
     color: '#334155',
+  },
+  unavailableCard: {
+    marginBottom: 24,
+    backgroundColor: '#FFFBEB',
+    borderWidth: 1,
+    borderColor: '#FCD34D',
+    borderRadius: 20,
+    padding: 16,
+    gap: 8,
+  },
+  unavailableTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  unavailableText: {
+    fontSize: 14,
+    lineHeight: 20,
+    color: '#78350F',
+  },
+  retryButton: {
+    alignSelf: 'flex-start',
+    marginTop: 4,
+    backgroundColor: '#16A34A',
+    borderRadius: 999,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+  retryButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  unavailableLink: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#166534',
   },
 
   // Bottom CTA
