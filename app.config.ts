@@ -27,6 +27,16 @@ const metaPlugin: [string, Record<string, string | boolean>] | null = metaPlugin
       },
     ]
   : null;
+const metaAemPlugin: [string, { appID: string; clientToken: string; displayName: string }] | null = metaPluginEnabled
+  ? [
+      './plugins/withMetaAemIos',
+      {
+        appID: metaAppId,
+        clientToken: metaClientToken,
+        displayName: 'Peel',
+      },
+    ]
+  : null;
 
 const config: ExpoConfig = {
   name: 'Peel',
@@ -89,6 +99,7 @@ const config: ExpoConfig = {
       },
     ],
     ...(metaPlugin ? [metaPlugin] : []),
+    ...(metaAemPlugin ? [metaAemPlugin] : []),
   ],
   experiments: {
     typedRoutes: true,
