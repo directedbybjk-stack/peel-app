@@ -117,23 +117,20 @@ export default function PaywallScreen() {
         return;
       }
 
-      const hasFreeTrial = Boolean(
-        selectedPackage.product.introPrice && selectedPackage.product.introPrice.price === 0
-      );
-
-      if (hasFreeTrial) {
+      if (selectedIntro.hasFreeTrial) {
         await trackMetaStartTrial({
           value: selectedPackage.product.price,
           currency: selectedPackage.product.currencyCode,
           plan: selectedPlan,
         });
-      } else {
-        await trackMetaPurchase({
-          value: selectedPackage.product.price,
-          currency: selectedPackage.product.currencyCode,
-          plan: selectedPlan,
-        });
       }
+
+      await trackMetaPurchase({
+        value: selectedPackage.product.price,
+        currency: selectedPackage.product.currencyCode,
+        plan: selectedPlan,
+      });
+
       await setOnboardingComplete();
       setOnboardingDone(true);
       router.replace('/(tabs)');

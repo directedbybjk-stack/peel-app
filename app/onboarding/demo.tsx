@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 
 import { brand } from '@/constants/Colors';
+import { requestMetaTrackingPermission, trackMetaRegistration } from '@/lib/metaTracking';
 import { lookupProduct, type ProductData } from '@/lib/openfoodfacts';
 import { savePreferences } from '@/lib/storage';
 
@@ -137,6 +138,8 @@ export default function DemoScreen() {
       return;
     }
     await savePreferences({ goal: goals || '', allergies: (allergies || '').split(',').filter(Boolean) });
+    await requestMetaTrackingPermission();
+    await trackMetaRegistration();
     router.replace('/paywall');
   };
 

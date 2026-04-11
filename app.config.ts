@@ -31,7 +31,7 @@ const metaPlugin: [string, Record<string, string | boolean>] | null = metaPlugin
 const config: ExpoConfig = {
   name: 'Peel',
   slug: 'peel-app',
-  version: '1.0.2',
+  version: '1.0.4',
   orientation: 'portrait',
   icon: './assets/images/icon.png',
   scheme: 'peelapp',
@@ -44,7 +44,7 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: false,
     bundleIdentifier: 'com.anonymous.peel-app',
-    buildNumber: '13',
+    buildNumber: '15',
     infoPlist: {
       ITSAppUsesNonExemptEncryption: false,
       NSUserTrackingUsageDescription:
